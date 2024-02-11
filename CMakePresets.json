@@ -1,0 +1,171 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "windows_base",
+      "hidden": true,
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "hostOS": [
+            "Windows"
+          ]
+        },
+        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
+          "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
+        }
+      }
+    },
+    {
+      "name": "linux_base",
+      "hidden": true,
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "hostOS": [
+            "Linux"
+          ]
+        },
+        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
+          "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
+        }
+      }
+    },
+    {
+      "name": "windows_msvc",
+      "inherits": "windows_base",
+      "displayName": "MSVC",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl"
+      }
+    },
+    {
+      "name": "windows_clang",
+      "inherits": "windows_base",
+      "displayName": "Clang",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER": "clang-cl"
+      }
+    },
+    {
+      "name": "linux_clang",
+      "inherits": "linux_base",
+      "displayName": "Clang",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "linux_gcc",
+      "inherits": "linux_base",
+      "displayName": "GCC",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windows_debug_msvc",
+      "displayName": "Debug",
+      "configurePreset": "windows_msvc",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows_release_msvc",
+      "displayName": "Release",
+      "configurePreset": "windows_msvc",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "windows_dist_msvc",
+      "displayName": "Dist",
+      "configurePreset": "windows_msvc",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows_debug_clang",
+      "displayName": "Debug",
+      "configurePreset": "windows_clang",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows_release_clang",
+      "displayName": "Release",
+      "configurePreset": "windows_clang",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "windows_dist_clang",
+      "displayName": "Dist",
+      "configurePreset": "windows_clang",
+      "configuration": "Release"
+    },
+    {
+      "name": "linux_debug_clang",
+      "displayName": "Debug",
+      "configurePreset": "linux_clang",
+      "configuration": "Debug"
+    },
+    {
+      "name": "linux_release_clang",
+      "displayName": "Release",
+      "configurePreset": "linux_clang",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "linux_dist_clang",
+      "displayName": "Dist",
+      "configurePreset": "linux_clang",
+      "configuration": "Release"
+    },
+    {
+      "name": "linux_debug_gcc",
+      "displayName": "Debug",
+      "configurePreset": "linux_gcc",
+      "configuration": "Debug"
+    },
+    {
+      "name": "linux_release_gcc",
+      "displayName": "Release",
+      "configurePreset": "linux_gcc",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "linux_dist_gcc",
+      "displayName": "Dist",
+      "configurePreset": "linux_gcc",
+      "configuration": "Release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "test_windows_msvc",
+      "configurePreset": "windows_msvc",
+      "configuration": "Debug"
+    },
+    {
+      "name": "test_windows_clang",
+      "configurePreset": "windows_clang",
+      "configuration": "Debug"
+    }
+  ]
+}
