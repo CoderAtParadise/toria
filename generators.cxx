@@ -5,12 +5,7 @@ export module toria:generators;
 #include <cstdlib>
 #include <iostream>
 #include <random>
-struct uuid;
-namespace detail
-{
-	class sha1;
-	class md5;
-}  // namespace detail
+#include "uuid.cxx"
 #endif  // __INTELLISENSE__
 
 import std;
@@ -74,7 +69,7 @@ namespace toria
 				: m_namespace_uuid(namespace_uuid){};
 
 			template<class CharType, class Traits>
-			uuid operator()(std::basic_string_view<CharType, Traits> str) {
+			[[nodiscard]] uuid operator()(std::basic_string_view<CharType, Traits> str) {
 				hashalgo hash{};
 				std::byte bytes[16];
 				auto nsbytes = m_namespace_uuid.as_bytes();
@@ -101,14 +96,18 @@ namespace toria
 				return uuid{digest, digest + 16};
 			}
 
+			[[nodiscard]] uuid operator()(std::string_view str) { return operator()<char>(str);
+			}
+
 		private:
 			uuid m_namespace_uuid;
 		};
 
+		// export template<is_clock clock>
 		class v6_generator
 		{};
 
-		export template<class engine, is_clock clock>
+		export template<class engine>
 		class v7_generator
 		{
 		public:
@@ -125,13 +124,15 @@ namespace toria
 				: m_monotonicity(monotonicity)
 				, m_generator(&engine) {}
 			// TODO support optional seeded counter
-			[[nodiscard]] uuid operator()() noexcept {
+
+			template<is_clock clock>
+			[[nodiscard]] uuid
+			operator()(std::chrono::time_point<clock> point) noexcept {
 				alignas(std::uint32_t) std::uint8_t bytes[16]{};
 				for (int i = 0; i < 16; i += 4)
 					*reinterpret_cast<std::uint32_t*>(bytes + i) = m_distribution(*m_generator);
 
-				auto now = clock::now();
-				std::uint64_t time = std::chrono::time_point_cast<std::chrono::milliseconds>(now)
+				std::uint64_t time = std::chrono::time_point_cast<std::chrono::milliseconds>(point)
 										 .time_since_epoch()
 										 .count();
 				// set time from the 48 least-significant bits
@@ -144,7 +145,7 @@ namespace toria
 
 				if (m_monotonicity == monotonicity::sub_milli ||
 					m_monotonicity == monotonicity::sub_milli_counter) {
-					auto micro = std::chrono::time_point_cast<std::chrono::microseconds>(now)
+					auto micro = std::chrono::time_point_cast<std::chrono::microseconds>(point)
 									 .time_since_epoch()
 									 .count();
 					int precision = 4096 * ((micro - time * 1000) / 1000.0f);
@@ -161,6 +162,10 @@ namespace toria
 				bytes[8] &= 0xBF;
 				bytes[8] |= 0x80;
 				return uuid(std::begin(bytes), std::end(bytes));
+			}
+
+			[[nodiscard]] uuid operator()() noexcept {
+				return operator()(std::chrono::system_clock::now());
 			}
 
 		private:

@@ -1,10 +1,10 @@
 export module toria;
 
-import std;
-
 export import :uuid;
 export import :generators;
 export import :std;
+
+import std;
 import :sha1;
 import :md5;
 
@@ -30,6 +30,6 @@ namespace toria
 	export using v4 = generators::v4_generator<std::mt19937>;
 	export using v5 = generators::name_generator<5,detail::sha1>;
 	export using v6 = generators::v6_generator;
-	export using v7 = generators::v7_generator<std::mt19937,std::chrono::system_clock>;
+	export using v7 = generators::v7_generator<std::mt19937>;
 }  // namespace uuids
 
