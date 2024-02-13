@@ -2,9 +2,11 @@ export module toria;
 
 import std;
 
-export import :impl;
+export import :uuid;
 export import :generators;
 export import :std;
+import :sha1;
+import :md5;
 
 namespace toria
 {
@@ -24,8 +26,9 @@ namespace toria
 	// clang-format on
 
 	//export using v1 = generators::v1_generator;
+	export using v3 = generators::name_generator<3,detail::md5>;
 	export using v4 = generators::v4_generator<std::mt19937>;
-	export using v5 = generators::v5_generator;
+	export using v5 = generators::name_generator<5,detail::sha1>;
 	export using v6 = generators::v6_generator;
 	export using v7 = generators::v7_generator<std::mt19937,std::chrono::system_clock>;
 }  // namespace uuids

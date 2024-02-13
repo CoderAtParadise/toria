@@ -1,4 +1,4 @@
-export module toria:impl;
+export module toria:uuid;
 
 import std;
 

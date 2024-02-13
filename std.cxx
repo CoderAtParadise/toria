@@ -1,7 +1,7 @@
 export module toria:std;
 
 import std;
-import :impl;
+import :uuid;
 
 
 namespace std

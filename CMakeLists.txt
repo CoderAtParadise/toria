@@ -12,7 +12,7 @@ endif()
 add_library (toria)
 
 target_compile_features(toria PRIVATE cxx_std_23)
-target_sources(toria PUBLIC FILE_SET CXX_MODULES FILES toria.cxx  impl.cxx generators.cxx std.cxx)
+target_sources(toria PUBLIC FILE_SET CXX_MODULES FILES toria.cxx  uuid.cxx generators.cxx std.cxx md5.cxx sha1.cxx)
 
 add_executable(hello main.cxx)
 target_compile_features(hello PRIVATE cxx_std_23)
