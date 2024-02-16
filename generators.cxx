@@ -10,9 +10,7 @@ export module toria:generators;
 
 import std;
 import :uuid;
-// #ifdef _WIN32
-// import :windows;
-// #endif  // _WIN32
+
 
 namespace toria
 {
@@ -47,7 +45,7 @@ namespace toria
 				for (int i = 0; i < 16; i += 4)
 					*reinterpret_cast<std::uint32_t*>(bytes + i) = m_distribution(*m_generator);
 				// version must be 0x4
-				bytes[6] &= 0x4F;
+				bytes[6] &= 0x0F;
 				bytes[6] |= 0x40;
 				// variant must be 0x8
 				bytes[8] &= 0xBF;
@@ -103,9 +101,30 @@ namespace toria
 			uuid m_namespace_uuid;
 		};
 
-		// export template<is_clock clock>
+		export template<class engine>
 		class v6_generator
-		{};
+		{
+			v6_generator(engine& engine = default_random())
+				: m_generator(&engine) {}
+
+			template<is_clock clock>
+			[[nodiscard]] uuid operator()(std::chrono::time_point<clock> point) noexcept {
+				alignas(std::uint32_t) std::uint8_t bytes[16]{};
+				for (int i = 0; i < 16; i += 4)
+					*reinterpret_cast<std::uint32_t*>(bytes + i) = m_distribution(*m_generator);
+				//  version must be
+				bytes[6] &= 0x0F;
+				bytes[6] |= 0x60;
+				// variant must be 0x8
+				bytes[8] &= 0xBF;
+				bytes[8] |= 0x80;
+				return uuid(std::begin(bytes), std::end(bytes));
+			}
+
+		private:
+			std::uniform_int_distribution<std::uint32_t> m_distribution;
+			engine* m_generator;
+		};
 
 		export template<class engine>
 		class v7_generator
@@ -113,25 +132,24 @@ namespace toria
 		public:
 			enum class monotonicity
 			{
-				none,
+				base,
 				sub_milli,
 				counter,
 				sub_milli_counter
 			};
 
 			v7_generator(
-				monotonicity monotonicity = monotonicity::none, engine& engine = default_random())
+				monotonicity monotonicity = monotonicity::base, engine& engine = default_random())
 				: m_monotonicity(monotonicity)
 				, m_generator(&engine) {}
 			// TODO support optional seeded counter
 
-			template<is_clock clock>
+			template<is_clock clock = std::chrono::system_clock>
 			[[nodiscard]] uuid
 			operator()(std::chrono::time_point<clock> point) noexcept {
 				alignas(std::uint32_t) std::uint8_t bytes[16]{};
 				for (int i = 0; i < 16; i += 4)
 					*reinterpret_cast<std::uint32_t*>(bytes + i) = m_distribution(*m_generator);
-
 				std::uint64_t time = std::chrono::time_point_cast<std::chrono::milliseconds>(point)
 										 .time_since_epoch()
 										 .count();
@@ -155,10 +173,10 @@ namespace toria
 				else if (m_monotonicity == monotonicity::counter) {}
 				if (m_monotonicity == monotonicity::sub_milli_counter) {}
 
-				//  version must be
-				bytes[6] &= 0x7F;
+				// version must be 7
+				bytes[6] &= 0x0F;
 				bytes[6] |= 0x70;
-				// variant must be 0x8
+				// set variant to 8
 				bytes[8] &= 0xBF;
 				bytes[8] |= 0x80;
 				return uuid(std::begin(bytes), std::end(bytes));
