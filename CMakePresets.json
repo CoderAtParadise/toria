@@ -4,7 +4,7 @@
     {
       "name": "windows_base",
       "hidden": true,
-      "generator": "Visual Studio 17 2022",
+      "generator": "Ninja Multi-Config",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
       "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
@@ -69,7 +69,8 @@
       "displayName": "Clang",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++"
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS": "clang-scan-deps"
       }
     },
     {

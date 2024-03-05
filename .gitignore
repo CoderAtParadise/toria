@@ -3,3 +3,5 @@ build
 *~
 .vs/
 out/
+/vc140.idb
+/vc140.pdb
