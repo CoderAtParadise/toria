@@ -1,17 +1,24 @@
-export module toria:std;
-
+export module toria.uuid:std;
+#ifdef __INTELLISENSE__
+#include <format>
+#include <cstddef>
+#include <cstdint>
+#include "impl.cppm"
+#else
 import std;
-import :uuid;
+import :impl;
+#endif  // __INTELLISENSE__
+
 
 
 namespace std
 {
 	template<>
-	struct formatter<toria::uuid>
+	struct formatter<toria::uuid::uuid>
 	{
 		constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
 
-		auto format(const toria::uuid& uuids, std::format_context& ctx) const {
+		auto format(const toria::uuid::uuid& uuids, std::format_context& ctx) const {
 			return format_to(
 				ctx.out(),
 				"{:02x}{:02x}{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}-{:02x}{:02x}{:02x}"
@@ -36,9 +43,9 @@ namespace std
 	};
 
 	template<>
-	struct hash<toria::uuid>
+	struct hash<toria::uuid::uuid>
 	{
-		std::size_t operator()(const toria::uuid& uuid) const {
+		std::size_t operator()(const toria::uuid::uuid& uuid) const {
 			std::uint64_t l = static_cast<uint64_t>(uuid.m_bytes[0]) << 56 |
 				static_cast<uint64_t>(uuid.m_bytes[1]) << 48 |
 				static_cast<uint64_t>(uuid.m_bytes[2]) << 40 |

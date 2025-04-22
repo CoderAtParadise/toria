@@ -2,20 +2,36 @@
   "version": 6,
   "configurePresets": [
     {
-      "name": "windows_base",
+      "name": "base",
       "hidden": true,
       "generator": "Ninja Multi-Config",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
-      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
       "architecture": {
         "value": "x64",
         "strategy": "external"
       },
+      "cacheVariables": { "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}" }
+    },
+    {
+      "name": "windows_base",
+      "hidden": true,
+      "inherits": "base",
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
           "hostOS": [
             "Windows"
+          ]
+        }
+      }
+    },
+    {
+      "name": "linux_base",
+      "inherits": "base",
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "hostOS": [
+            "Linux"
           ]
         },
         "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
@@ -24,20 +40,12 @@
       }
     },
     {
-      "name": "linux_base",
-      "hidden": true,
-      "generator": "Ninja Multi-Config",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "installDir": "${sourceDir}/out/install/${presetName}",
-      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
+      "name": "macos_base",
+      "inherits": "base",
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
           "hostOS": [
-            "Linux"
+            "macOS"
           ]
         },
         "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
@@ -55,12 +63,27 @@
       }
     },
     {
+      "name": "windows_msvc_asan",
+      "inherits": "windows_msvc",
+      "displayName": "MSVC | ASAN",
+      "environment": {
+        "CFLAGS": "/fsanitize=address",
+        "CXXFLAGS": "/fsanitize=address"
+      }
+    },
+    {
       "name": "windows_clang",
       "inherits": "windows_base",
       "displayName": "Clang",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang-cl",
         "CMAKE_CXX_COMPILER": "clang-cl"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-clang-x64",
+          "enableClangTidyCodeAnalysis": true
+        }
       }
     },
     {
@@ -71,6 +94,11 @@
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS": "clang-scan-deps"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-clang-x64"
+        }
       }
     },
     {
@@ -80,6 +108,11 @@
       "cacheVariables": {
         "CMAKE_C_COMPILER": "gcc",
         "CMAKE_CXX_COMPILER": "g++"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "linux-gcc-x64"
+        }
       }
     }
   ],
@@ -91,16 +124,28 @@
       "configuration": "Debug"
     },
     {
-      "name": "windows_release_msvc",
-      "displayName": "Release",
+      "name": "windows_qa_msvc",
+      "displayName": "Quality Assurance",
       "configurePreset": "windows_msvc",
       "configuration": "RelWithDebInfo"
     },
     {
-      "name": "windows_dist_msvc",
-      "displayName": "Dist",
+      "name": "windows_release_msvc",
+      "displayName": "Release",
       "configurePreset": "windows_msvc",
       "configuration": "Release"
+    },
+    {
+      "name": "windows_debug_msvc_asan",
+      "displayName": "Debug",
+      "configurePreset": "windows_msvc_asan",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows_qa_msvc_asan",
+      "displayName": "Quality Assurance",
+      "configurePreset": "windows_msvc_asan",
+      "configuration": "RelWithDebInfo"
     },
     {
       "name": "windows_debug_clang",
@@ -116,7 +161,7 @@
     },
     {
       "name": "windows_dist_clang",
-      "displayName": "Dist",
+      "displayName": "Distribution",
       "configurePreset": "windows_clang",
       "configuration": "Release"
     },
@@ -134,7 +179,7 @@
     },
     {
       "name": "linux_dist_clang",
-      "displayName": "Dist",
+      "displayName": "Distribution",
       "configurePreset": "linux_clang",
       "configuration": "Release"
     },
@@ -152,7 +197,7 @@
     },
     {
       "name": "linux_dist_gcc",
-      "displayName": "Dist",
+      "displayName": "Distribution",
       "configurePreset": "linux_gcc",
       "configuration": "Release"
     }
