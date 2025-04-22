@@ -80,7 +80,7 @@ namespace toria
 				[[nodiscard]] uuid operator()(std::basic_string_view<CharType, Traits> str) {
 					hashalgo hash{};
 					std::byte bytes[16];
-					auto nsbytes = m_namespace_uuid.as_bytes();
+					auto nsbytes = m_namespace_uuid.bytes();
 					std::copy(std::cbegin(nsbytes), std::cend(nsbytes), bytes);
 					hash.process_bytes(bytes, 16);
 
