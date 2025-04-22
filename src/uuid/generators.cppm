@@ -79,7 +79,7 @@ namespace toria
 				template<class CharType, class Traits>
 				[[nodiscard]] uuid operator()(std::basic_string_view<CharType, Traits> str) {
 					hashalgo hash{};
-					std::byte bytes[16];
+					std::byte bytes[16]{};
 					auto nsbytes = m_namespace_uuid.bytes();
 					std::copy(std::cbegin(nsbytes), std::cend(nsbytes), bytes);
 					hash.process_bytes(bytes, 16);
@@ -93,7 +93,7 @@ namespace toria
 						}
 					}
 
-					typename hashalgo::digest8_t digest;
+					typename hashalgo::digest8_t digest{};
 					hash.get_digest_bytes(digest);
 					digest[6] &= 0x0F;
 					digest[6] |= version << 4;
