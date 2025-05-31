@@ -16,30 +16,41 @@ namespace toria
 		export class uuid
 		{
 		private:
-			constexpr uuid(std::uint8_t inital) noexcept { m_bytes.fill(inital); }
+			constexpr uuid(std::uint8_t inital) noexcept { m_bytes.fill(std::byte(inital)); }
 
 		public:
-			enum class variant
+			enum class variant_type
 			{
-				ncs,
-				rfc,
-				microsoft,
-				reserved,
-				nil,
-				max,
+				ncs = 0x7,
+				rfc_4122 = 0xb,
+				microsoft = 0xd,
+				future = 0xf
+			};
+
+			enum class version_type
+			{
+				vfuture = -1,
+				v1 = 1,
+				v2 = 2,
+				v3 = 3,
+				v4 = 4,
+				v5 = 5,
+				v6 = 6,
+				v7 = 7,
+				v8 = 8,
 			};
 
 		public:
 			constexpr uuid() noexcept = default;
 
-			constexpr uuid(std::uint8_t (&arr)[16]) noexcept {
+			constexpr uuid(std::byte (&arr)[16]) noexcept {
 				std::copy(std::cbegin(arr), std::cend(arr), m_bytes.begin());
 			}
 
-			constexpr uuid(std::span<std::uint8_t> bytes) noexcept {
+			constexpr uuid(std::span<std::byte> bytes) noexcept {
 				std::ranges::copy(bytes, m_bytes.begin());
 			}
-			constexpr uuid(const std::array<std::uint8_t, 16>& arr) noexcept
+			constexpr uuid(const std::array<std::byte, 16>& arr) noexcept
 				: m_bytes(arr) {}
 
 			constexpr uuid(std::forward_iterator auto first, std::forward_iterator auto last) {
@@ -51,53 +62,79 @@ namespace toria
 				: uuid(range.begin(), range.end()) {}
 
 			constexpr uuid(std::string_view str) noexcept {
-				if (str.size() != 36)
+				if (str[0] == '{')
+					str = str.substr(1);
+				if (str.size() != 36) {
+					if (str.size() == 38)
+						str = str.substr(1, 36);
 					return;
-				auto parse_hex = [](std::string_view str, std::uint8_t& hexOut) {
+				}
+				auto parse_hex = [](std::string_view str, std::uint8_t& hexOut) constexpr {
 					auto [_, ec] = std::from_chars(str.data(), str.data() + str.size(), hexOut, 16);
 					return ec == std::errc{};
 				};
 				bool parseSuccess = true;
+				std::size_t;
 				for (std::size_t idx{0}, hyphenCount{0}; idx < 16; idx++) {
 					if (idx == 4 || idx == 6 || idx == 8 || idx == 10)
 						hyphenCount++;
-					parseSuccess = parseSuccess &&
-						parse_hex(str.substr(idx * 2 + hyphenCount, 2), m_bytes[idx]);
+					std::uint8_t hexOut = 0;
+					parseSuccess =
+						parseSuccess && parse_hex(str.substr(idx * 2 + hyphenCount, 2), hexOut);
+					m_bytes[idx] = std::byte(hexOut);
 				}
 				if (!parseSuccess)
-					m_bytes = {{0x00}};
+					m_bytes.fill(std::byte(0x00));
 			}
 
-			[[nodiscard]] constexpr std::size_t version() const noexcept { return m_bytes[6] >> 4; }
+			[[nodiscard]] constexpr version_type version() const noexcept {
+				switch (std::to_integer<std::size_t>(m_bytes[6] >> 4)) {
+					case 1:
+						return version_type::v1;
+					case 2:
+						return version_type::v2;
+					case 3:
+						return version_type::v3;
+					case 4:
+						return version_type::v4;
+					case 5:
+						return version_type::v5;
+					case 6:
+						return version_type::v6;
+					case 7:
+						return version_type::v7;
+					case 8:
+						return version_type::v8;
+					default:
+						return version_type::vfuture;
+				}
+			}
 
-			[[nodiscard]] constexpr variant variant() const noexcept {
-				auto var = m_bytes[8] >> 4;
-				if (var <= 0b0111)
-					return is_nil() ? variant::nil : variant::ncs;
-				else if (var <= 0b1011)
-					return variant::rfc;
-				else if (var <= 0b1101)
-					return variant::microsoft;
+			[[nodiscard]] constexpr variant_type variant() const noexcept {
+				auto varbit = m_bytes[8] >> 4;
+				if (varbit <= std::byte(0b0111))
+					return variant_type::ncs;
+				else if (varbit <= std::byte(0b1011))
+					return variant_type::rfc_4122;
+				else if (varbit <= std::byte(0b1101))
+					return variant_type::microsoft;
 				else
-					return is_max() ? variant::max : variant::reserved;
+					return variant_type::future;
 			}
 
 			[[nodiscard]] constexpr bool is_nil() const noexcept {
-				constexpr static uuid nil_uuid{};
+				constexpr static uuid nil_uuid{0x00};
 				return this->operator==(nil_uuid);
 			}
 
 			[[nodiscard]] constexpr bool is_max() const noexcept {
-				constexpr static uuid max_uuid{static_cast<std::uint8_t>(0xff)};
+				constexpr static uuid max_uuid{0xff};
 				return this->operator==(max_uuid);
 			}
 
 			constexpr void swap(uuid& rhs) noexcept { m_bytes.swap(rhs.m_bytes); }
 
-			[[nodiscard]] std::span<const std::byte, 16> bytes() const noexcept {
-				return std::span<const std::byte, 16>{
-					reinterpret_cast<const std::byte*>(m_bytes.data()), 16};
-			}
+			[[nodiscard]] constexpr std::span<const std::byte, 16> bytes() const noexcept { return m_bytes; }
 
 			constexpr bool operator==(const uuid& rhs) const noexcept {
 				return this->m_bytes == rhs.m_bytes;
@@ -108,9 +145,7 @@ namespace toria
 			}
 
 		private:
-			std::array<std::uint8_t, 16> m_bytes{{0}};
-			friend std::formatter<uuid>;
-			friend std::hash<uuid>;
+			alignas(std::uint64_t) std::array<std::byte, 16> m_bytes{};
 		};
 
 		export void swap(uuid& lhs, uuid& rhs) {

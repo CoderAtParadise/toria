@@ -1,15 +1,15 @@
 export module toria.uuid:generators;
 
 #ifdef __INTELLISENSE__
+#include "impl.cppm"
 #include <chrono>
 #include <random>
-#include "impl.cppm"
 #else
 import std;
 import :impl;
+import toria.crypto;
 
 #endif  // __INTELLISENSE__
-
 
 namespace toria
 {
@@ -19,91 +19,69 @@ namespace toria
 		template<class T>
 		concept is_clock = std::chrono::is_clock_v<T>;
 
-		export template<is_clock clock>
-		[[nodiscard]] std::chrono::time_point<clock>
-		to_gregorian_epoch(std::chrono::time_point<clock> point) {
-			auto start = std::chrono::system_clock::from_time_t(std::time_t(-1219292800));
-			return std::chrono::clock_cast<clock, std::chrono::system_clock>(
-				std::chrono::clock_cast<std::chrono::system_clock, clock>(point) - start);
-		}
-
 		namespace generators
 		{
+			// If made static msvc is saying the definition cannot be found
+			constexpr void set_version_and_variant(std::span<std::byte, 16> bytes, uuid::version_type version) {
+				bytes[6] = (bytes[6] & std::byte(0x0f)) | std::byte(std::to_underlying(version) << 4);
+				bytes[8] = (bytes[8] & std::byte(0x3f)) | std::byte(0x80);
+			}
+
 			export std::mt19937_64& default_random() noexcept {
 				static std::random_device rd;
 				static std::mt19937_64 gen(rd());
 				return gen;
 			}
 
-			template<class T>
-			concept is_hash_algorithm =
-				requires (T& t, std::uint8_t byte, const void* data, std::uint8_t* digest) {
-					typename T::digest8_t;
-					t.process_byte(byte);
-					t.process_bytes(data, 0ui64);
-					t.get_digest_bytes(digest);
-				};
-
-			export template<class engine>
+			export template<class Engine>
 			class v4_generator
 			{
 			public:
-				v4_generator(engine& engine = default_random())
+				v4_generator(Engine& engine = default_random())
 					: m_generator(&engine) {}
-				[[nodiscard]] uuid operator()() {
-					alignas(std::uint64_t) std::uint8_t bytes[16]{};
-					*reinterpret_cast<std::uint64_t*>(bytes) = m_distribution(*m_generator);
-					*reinterpret_cast<std::uint64_t*>(bytes + 8) = m_distribution(*m_generator);
-					// version must be 0x4
-					bytes[6] &= 0x0F;
-					bytes[6] |= 0x40;
-					// variant must be 0x8
-					bytes[8] &= 0xBF;
-					bytes[8] |= 0x80;
-
-					return uuid(std::begin(bytes), std::end(bytes));
+				[[nodiscard]] uuid operator()() noexcept {
+					std::uint64_t generated[2] = {
+						m_distribution(*m_generator), m_distribution(*m_generator)};
+					std::span<std::byte, 16> bytes{reinterpret_cast<std::byte*>(generated), 16};
+					set_version_and_variant(bytes, uuid::version_type::v4);
+					return uuid(bytes);
 				}
 
 			private:
 				std::uniform_int_distribution<std::uint64_t> m_distribution;
-				engine* m_generator;
+				Engine* m_generator;
 			};
 
-			export template<std::uint8_t version, is_hash_algorithm hashalgo>
+			export template<uuid::version_type Version, toria::crypto::HashAlgo HashAlgo>
 			class name_generator
 			{
 			public:
-				explicit name_generator(const uuid& namespace_uuid) noexcept
+				constexpr explicit name_generator(const uuid& namespace_uuid) noexcept
 					: m_namespace_uuid(namespace_uuid) {};
 
 				template<class CharType, class Traits>
-				[[nodiscard]] uuid operator()(std::basic_string_view<CharType, Traits> str) {
-					hashalgo hash{};
-					std::byte bytes[16]{};
-					auto nsbytes = m_namespace_uuid.bytes();
-					std::copy(std::cbegin(nsbytes), std::cend(nsbytes), bytes);
-					hash.process_bytes(bytes, 16);
+				[[nodiscard]] constexpr uuid operator()(std::basic_string_view<CharType, Traits> str) const {
+					toria::crypto::hash<HashAlgo> hash{};
+					hash.update(m_namespace_uuid.bytes());
 
-					for (std::uint32_t c : str) {
-						hash.process_byte(static_cast<std::uint8_t>(c & 0xFF));
+					for (std::uint32_t substring : str) {
+						hash.update(std::byte(substring & 0xFF));
 						if constexpr (!std::same_as<CharType, char>) {
-							hash.process_byte(static_cast<std::uint8_t>((c >> 8) & 0xFF));
-							hash.process_byte(static_cast<std::uint8_t>((c >> 16) & 0xFF));
-							hash.process_byte(static_cast<std::uint8_t>((c >> 24) & 0xFF));
+							hash.update(std::byte((substring >> 8) & 0xFF));
+							hash.update(std::byte((substring >> 16) & 0xFF));
+							hash.update(std::byte((substring >> 24) & 0xFF));
 						}
 					}
 
-					typename hashalgo::digest8_t digest{};
-					hash.get_digest_bytes(digest);
-					digest[6] &= 0x0F;
-					digest[6] |= version << 4;
-					digest[8] &= 0xBF;
-					digest[8] |= 0x80;
-
-					return uuid{digest, digest + 16};
+					std::byte digest[16]{};
+					std::span<std::byte, 16> bytes{digest, 16};
+					hash.finalize();
+					hash.get_bytes(bytes);
+					set_version_and_variant(bytes, Version);
+					return uuid{bytes};
 				}
 
-				[[nodiscard]] uuid operator()(std::string_view str) {
+				[[nodiscard]]constexpr uuid operator()(std::string_view str) const {
 					return operator()<char>(str);
 				}
 
@@ -111,40 +89,7 @@ namespace toria
 				uuid m_namespace_uuid;
 			};
 
-			export template<class engine>
-			class v6_generator
-			{
-				v6_generator(engine& engine = default_random())
-					: m_generator(&engine) {}
-
-				template<is_clock clock>
-				[[nodiscard]] uuid operator()(std::chrono::time_point<clock> point) noexcept {
-					alignas(std::uint64_t) std::uint8_t bytes[16]{};
-					*reinterpret_cast<std::uint64_t*>(bytes) = m_distribution(*m_generator);
-					*reinterpret_cast<std::uint64_t*>(bytes + 8) = m_distribution(*m_generator);
-
-					std::uint64_t time =
-						std::chrono::time_point_cast<std::chrono::milliseconds>(point)
-							.time_since_epoch()
-							.count();
-					// Set Version and Variant
-					bytes[6] &= 0x0F;
-					bytes[6] |= 0x60;
-					bytes[8] &= 0xBF;
-					bytes[8] |= 0x80;
-					return uuid(std::begin(bytes), std::end(bytes));
-				}
-
-				[[nodiscard]] uuid operator()() noexcept {
-					return operator()(to_gregorian_epoch(std::chrono::system_clock::now()));
-				}
-
-			private:
-				std::uniform_int_distribution<std::uint64_t> m_distribution;
-				engine* m_generator;
-			};
-
-			export template<class engine>
+			export template<class Engine>
 			class v7_generator
 			{
 			public:
@@ -158,16 +103,16 @@ namespace toria
 
 				v7_generator(
 					monotonicity monotonicity = monotonicity::base,
-					engine& engine = default_random())
+					Engine& Engine = default_random())
 					: m_monotonicity(monotonicity)
-					, m_generator(&engine) {}
+					, m_generator(&Engine) {}
 				// TODO support optional seeded counter
 
 				template<is_clock clock = std::chrono::system_clock>
 				[[nodiscard]] uuid operator()(std::chrono::time_point<clock> point) noexcept {
-					alignas(std::uint64_t) std::uint8_t bytes[16]{};
-					*reinterpret_cast<std::uint64_t*>(bytes) = m_distribution(*m_generator);
-					*reinterpret_cast<std::uint64_t*>(bytes + 8) = m_distribution(*m_generator);
+					std::uint64_t generated[2] = {
+						m_distribution(*m_generator), m_distribution(*m_generator)};
+					std::span<std::byte, 16> bytes{reinterpret_cast<std::byte*>(generated), 16};
 					std::uint64_t time =
 						std::chrono::time_point_cast<std::chrono::milliseconds>(point)
 							.time_since_epoch()
@@ -192,13 +137,8 @@ namespace toria
 					else if (m_monotonicity == monotonicity::counter) {}
 					if (m_monotonicity == monotonicity::sub_milli_counter) {}
 
-					// set version to 7
-					bytes[6] &= 0x0F;
-					bytes[6] |= 0x70;
-					// set variant to 8
-					bytes[8] &= 0xBF;
-					bytes[8] |= 0x80;
-					return uuid(std::begin(bytes), std::end(bytes));
+					set_version_and_variant(bytes, uuid::version_type::v7);
+					return uuid(bytes);
 				}
 
 				[[nodiscard]] uuid operator()() noexcept {
@@ -207,7 +147,7 @@ namespace toria
 
 			private:
 				std::uniform_int_distribution<std::uint64_t> m_distribution;
-				engine* m_generator;
+				Engine* m_generator;
 				monotonicity m_monotonicity;
 			};
 		}  // namespace generators

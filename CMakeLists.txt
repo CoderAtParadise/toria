@@ -19,19 +19,33 @@ target_sources(
     TYPE CXX_MODULES
     BASE_DIRS "${CMAKE_CURRENT_LIST_DIR}/src/uuid"
     FILES
-        src/uuid/crypto/md5.cppm
-        src/uuid/crypto/sha1.cppm
         src/uuid/generators.cppm
         src/uuid/impl.cppm     
         src/uuid/std.cppm
         src/uuid/uuid.cppm
 )
 
+target_sources(
+    ${PROJECT_NAME} PUBLIC
+    FILE_SET ${PROJECT_NAME}_CRYPTO
+    TYPE CXX_MODULES
+    BASE_DIRS "${CMAKE_CURRENT_LIST_DIR}/src/crypto"
+    FILES
+        src/crypto/common.cppm
+        src/crypto/crypto.cppm
+        src/crypto/md5.cppm
+        "src/crypto/hash.cppm"
+        "src/crypto/sha1.cppm"
+ "src/crypto/std.cppm")
+
 install(
     TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}-targets
     FILE_SET ${PROJECT_NAME}_UUID
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}")
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}"
+    FILE_SET ${PROJECT_NAME}_CRYPTO
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}"
+)
 
 #[[==INSTALL EXPORT TARGETS==]]
 
