@@ -1,11 +1,15 @@
 export module toria.crypto:md5;
 #ifdef __INTELLISENSE__
+#include "common.cppm"
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <span>
 #else
 import std;
+import :common;
+import toria.util;
 #endif  // __INTELLISENSE__
 
 namespace toria
@@ -15,227 +19,251 @@ namespace toria
 		export class md5
 		{
 		public:
-			using digest = std::uint32_t[4];
-			static constexpr std::size_t DigestSize = 4 * sizeof(std::uint32_t);
-			void reset() {
-				m_digest[0] = 0x6452301;
+			static constexpr std::size_t HashSize = 4 * sizeof(std::uint32_t);
+			static constexpr std::size_t HashSizeBits = HashSize * 8;
+			static constexpr std::size_t MessageBlockSize = 64;
+			constexpr md5() noexcept { this->reset(); }
+			constexpr void reset() noexcept {
+				m_digest[0] = 0x67452301;
 				m_digest[1] = 0xEFCDAB89;
 				m_digest[2] = 0x98BADCFE;
 				m_digest[3] = 0x10325476;
-				m_count[0] = 0;
-				m_count[1] = 0;
+				m_bits[0] = 0;
+				m_bits[1] = 0;
+				m_finalized = false;
 			}
 
-			void process_byte(std::uint8_t byte) {}
-
-			void process_bytes(const void* data, std::size_t len) {
-				const std::uint8_t* block = static_cast<const std::uint8_t*>(data);
-				std::size_t index = m_count[0] / 8 % BLOCK_SIZE;
-				if ((m_count[0] += len << 3) < len << 3)
-					m_count[1]++;
-				m_count[1] += len >> 29;
-				std::size_t first = 64 - index;
+			constexpr hash_err update(std::byte byte) {
+				std::array<std::byte, 1> temp{byte};
+				return update(temp);
 			}
 
-			void get_digest(digest digest) {}
+			constexpr hash_err update(const std::span<const std::byte> bytes) {
+				return this->update(bytes, false);
+			}
 
-			void get_bytes(std::span<std::uint8_t, 16> digest) { encode(digest, m_digest, 16); }
+			constexpr hash_err finalize() noexcept {
+				if (m_finalized)
+					return hash_err::ALREADY_FINALIZED;
+				m_finalized = true;
+				std::size_t used = (m_bits[0] >> 3) & 0x3F;
+				std::size_t count = 64u - 1u - used ;
+				std::span<std::uint8_t> block{m_block};
+				block[used++] = 0x80;
+				if (count < 8) {
+					util::fill_bytes(block.subspan(used), 0, count);
+					transform();
+					util::fill_bytes(block, 0, 56);
+				}
+				else
+					util::fill_bytes(block.subspan(used), 0, count - 8);
+				std::span<const std::uint32_t> countBytes{m_bits};
+				util::copy_bytes(block.subspan(56),countBytes);
+				transform();
+				return hash_err::SUCCESS;
+			}
+
+			constexpr hash_err get_digest(std::span<std::byte> bytesOut) const noexcept {
+				if (!m_finalized)
+					return hash_err::NOT_FINALIZED;
+				std::span<const std::uint32_t> digest{m_digest};
+				util::copy_bytes(bytesOut, digest);
+				return hash_err::SUCCESS;
+			}
 
 		private:
-			static constexpr std::uint32_t s[]{
-				7, 12, 22, 17, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21};
-
-			static constexpr std::uint32_t k[]{
-				0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee, 0xf57c0faf, 0x4787c62a, 0xa8304613,
-				0xfd469501, 0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be, 0x6b901122, 0xfd987193,
-				0xa679438e, 0x49b40821, 0xf61e2562, 0xc040b340, 0x265e5a51, 0xe9b6c7aa, 0xd62f105d,
-				0x2441453,  0xd8a1e681, 0xe7d3fbc8, 0x21e1cde6, 0xc33707d6, 0xf4d50d87, 0x455a14ed,
-				0xa9e3e905, 0xfcefa3f8, 0x676f02d9, 0x8d2a4c8a, 0xfffa3942, 0x8771f681, 0x6d9d6122,
-				0xfde5380c, 0xa4beea44, 0x4bdecfa9, 0xf6bb4b60, 0xbebfbc70, 0x289b7ec6, 0xeaa127fa,
-				0xd4ef3085, 0x4881d05,  0xd9d4d039, 0xe6db99e5, 0x1fa27cf8, 0xc4ac5665, 0xf4292244,
-				0x432aff97, 0xab9423a7, 0xfc93a039, 0x655b59c3, 0x8f0ccc92, 0xffeff47d, 0x85845dd1,
-				0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1, 0xf7537e82, 0xbd3af235, 0x2ad7d2bb,
-				0xeb86d391};
-			static constexpr std::uint32_t BLOCK_SIZE = 64;
-			digest m_digest;
-			std::uint32_t m_count[2];
-			std::uint8_t m_block[BLOCK_SIZE];
+			std::array<std::uint32_t, HashSize / sizeof(std::uint32_t)> m_digest;
+			std::array<std::uint32_t, 2> m_bits;
+			bool m_finalized = false;
+			std::array<std::uint8_t, MessageBlockSize> m_block{};
 
 		private:
-			static std::uint32_t
-			left_rotate(std::uint32_t value, const std::size_t count) noexcept {
-				return (value << count) ^ (value >> (32 - count));
+			/*
+			 * Basic MD5 functions which have been optimized based on Colin Plub's implementation
+			 */
+			static constexpr auto F(std::uint32_t x, std::uint32_t y, std::uint32_t z) {
+				return z ^ (x & (y ^ z));
 			}
 
-			static std::uint32_t f(std::uint32_t x, std::uint32_t y, std::uint32_t z) {
-				return (x & y) | (~x & z);
+			static constexpr auto G(std::uint32_t x, std::uint32_t y, std::uint32_t z) {
+				return y ^ (z & (x ^ y));
 			}
 
-			static std::uint32_t g(std::uint32_t x, std::uint32_t y, std::uint32_t z) {
-				return (x & z) | (y & ~z);
+			static constexpr auto I(std::uint32_t x, std::uint32_t y, std::uint32_t z) {
+				return y ^ (x | ~z);
 			}
 
-			static std::uint32_t h(std::uint32_t x, std::uint32_t y, std::uint32_t z) {
-				return x ^ y ^ z;
+			static constexpr void Step(
+				std::invocable<std::uint32_t, std::uint32_t, std::uint32_t> auto f,
+				std::uint32_t& w,
+				std::uint32_t x,
+				std::uint32_t y,
+				std::uint32_t z,
+				std::uint32_t data,
+				std::uint32_t S) {
+				w += f(x, y, z) + data;
+				w = left_rotate(w, S);
+				w += x;
 			}
 
-			static std::uint32_t i(std::uint32_t x, std::uint32_t y, std::uint32_t z) {
-				return (y ^ x) | ~z;
+			constexpr hash_err update(const std::span<const std::byte> bytes, bool finalizing) {
+				if (m_finalized && !finalizing)
+					return hash_err::ALREADY_FINALIZED;
+				std::size_t used = m_bits[0];
+				std::size_t bytesLen = bytes.size();
+				if ((m_bits[0] += (bytesLen << 3)) < used)
+					m_bits[1]++;
+				m_bits[1] += bytesLen >> 29;
+				used = (used >> 3) & 0x3F;
+				std::size_t available = 64 - used;
+				std::size_t bytesOffset = 0;
+				std::span<std::uint8_t> block = std::span(m_block);
+				if (used) {
+					auto offsetBlock = block.subspan(used);
+					if (bytesLen < available) {
+						util::copy_bytes(offsetBlock, bytes);
+						return hash_err::SUCCESS;
+					}
+					util::copy_bytes(offsetBlock, bytes.subspan(0, available));
+					transform();
+					bytesOffset += used;
+					bytesLen -= used;
+				}
+				while (bytesLen >= 64) {
+					util::copy_bytes(block, bytes.subspan(bytesOffset, 64));
+					transform();
+					bytesLen -= 64;
+					bytesOffset += 64;
+				}
+				if (bytesLen > 0)
+					util::copy_bytes(block, bytes.subspan(bytesOffset, bytesLen));
+				return hash_err::SUCCESS;
 			}
 
-			static void
-			ff(std::uint32_t& a,
-			   std::uint32_t b,
-			   std::uint32_t c,
-			   std::uint32_t d,
-			   std::uint32_t x,
-			   std::uint32_t s,
-			   std::uint32_t ac) {
-				a += f(b, c, d) + x + ac;
-				a = left_rotate(a, s);
-				a += b;
-			}
+			constexpr void transform() noexcept {
+				static constexpr std::uint32_t S[]{
+					7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21};
+				static constexpr std::uint32_t K[]{
+					0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee, 0xf57c0faf, 0x4787c62a,
+					0xa8304613, 0xfd469501, 0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be,
+					0x6b901122, 0xfd987193, 0xa679438e, 0x49b40821, 0xf61e2562, 0xc040b340,
+					0x265e5a51, 0xe9b6c7aa, 0xd62f105d, 0x2441453,  0xd8a1e681, 0xe7d3fbc8,
+					0x21e1cde6, 0xc33707d6, 0xf4d50d87, 0x455a14ed, 0xa9e3e905, 0xfcefa3f8,
+					0x676f02d9, 0x8d2a4c8a, 0xfffa3942, 0x8771f681, 0x6d9d6122, 0xfde5380c,
+					0xa4beea44, 0x4bdecfa9, 0xf6bb4b60, 0xbebfbc70, 0x289b7ec6, 0xeaa127fa,
+					0xd4ef3085, 0x4881d05,  0xd9d4d039, 0xe6db99e5, 0x1fa27cf8, 0xc4ac5665,
+					0xf4292244, 0x432aff97, 0xab9423a7, 0xfc93a039, 0x655b59c3, 0x8f0ccc92,
+					0xffeff47d, 0x85845dd1, 0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1,
+					0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391};
+				std::array<std::uint32_t, 16> buffer{};
+				auto [A, B, C, D] = m_digest;
 
-			static void
-			gg(std::uint32_t& a,
-			   std::uint32_t b,
-			   std::uint32_t c,
-			   std::uint32_t d,
-			   std::uint32_t x,
-			   std::uint32_t s,
-			   std::uint32_t ac) {
-				a += g(b, c, d) + x + ac;
-				a = left_rotate(a, s);
-				a += b;
-			}
+				decode(buffer, m_block);
 
-			static void
-			hh(std::uint32_t& a,
-			   std::uint32_t b,
-			   std::uint32_t c,
-			   std::uint32_t d,
-			   std::uint32_t x,
-			   std::uint32_t s,
-			   std::uint32_t ac) {
-				a += h(b, c, d) + x + ac;
-				a = left_rotate(a, s);
-				a += b;
-			}
-
-			static void
-			ii(std::uint32_t& a,
-			   std::uint32_t b,
-			   std::uint32_t c,
-			   std::uint32_t d,
-			   std::uint32_t x,
-			   std::uint32_t s,
-			   std::uint32_t ac) {
-				a += i(b, c, d) + x + ac;
-				a = left_rotate(a, s);
-				a += b;
-			}
-
-			void process_block(std::uint8_t* block) {
-				std::uint32_t a = m_digest[0];
-				std::uint32_t b = m_digest[1];
-				std::uint32_t c = m_digest[2];
-				std::uint32_t d = m_digest[3];
-				std::uint32_t x[16];
-
-				decode(x, block, 64);
-
-				ff(a, b, c, d, x[0], s[0], k[0]);   /* 1 */
-				ff(d, a, b, c, x[1], s[1], k[1]);   /* 2 */
-				ff(c, d, a, b, x[2], s[2], k[2]);   /* 3 */
-				ff(b, c, d, a, x[3], s[3], k[3]);   /* 4 */
-				ff(a, b, c, d, x[4], s[0], k[4]);   /* 5 */
-				ff(d, a, b, c, x[5], s[1], k[5]);   /* 6 */
-				ff(c, d, a, b, x[6], s[2], k[6]);   /* 7 */
-				ff(b, c, d, a, x[7], s[3], k[7]);   /* 8 */
-				ff(a, b, c, d, x[8], s[0], k[8]);   /* 9 */
-				ff(d, a, b, c, x[9], s[1], k[9]);   /* 10 */
-				ff(c, d, a, b, x[10], s[2], k[10]); /* 11 */
-				ff(b, c, d, a, x[11], s[3], k[11]); /* 12 */
-				ff(a, b, c, d, x[12], s[0], k[12]); /* 13 */
-				ff(d, a, b, c, x[13], s[1], k[13]); /* 14 */
-				ff(c, d, a, b, x[14], s[2], k[14]); /* 15 */
-				ff(b, c, d, a, x[15], s[3], k[15]); /* 16 */
+				Step(F, A, B, C, D, buffer[0] + K[0], S[0]);   /* 1 */
+				Step(F, D, A, B, C, buffer[1] + K[1], S[1]);   /* 2 */
+				Step(F, C, D, A, B, buffer[2] + K[2], S[2]);   /* 3 */
+				Step(F, B, C, D, A, buffer[3] + K[3], S[3]);   /* 4 */
+				Step(F, A, B, C, D, buffer[4] + K[4], S[0]);   /* 5 */
+				Step(F, D, A, B, C, buffer[5] + K[5], S[1]);   /* 6 */
+				Step(F, C, D, A, B, buffer[6] + K[6], S[2]);   /* 7 */
+				Step(F, B, C, D, A, buffer[7] + K[7], S[3]);   /* 8 */
+				Step(F, A, B, C, D, buffer[8] + K[8], S[0]);   /* 9 */
+				Step(F, D, A, B, C, buffer[9] + K[9], S[1]);   /* 10 */
+				Step(F, C, D, A, B, buffer[10] + K[10], S[2]); /* 11 */
+				Step(F, B, C, D, A, buffer[11] + K[11], S[3]); /* 12 */
+				Step(F, A, B, C, D, buffer[12] + K[12], S[0]); /* 13 */
+				Step(F, D, A, B, C, buffer[13] + K[13], S[1]); /* 14 */
+				Step(F, C, D, A, B, buffer[14] + K[14], S[2]); /* 15 */
+				Step(F, B, C, D, A, buffer[15] + K[15], S[3]); /* 16 */
 
 				/* Round 2 */
-				gg(a, b, c, d, x[1], s[4], k[16]);  /* 17 */
-				gg(d, a, b, c, x[6], s[5], k[17]);  /* 18 */
-				gg(c, d, a, b, x[11], s[6], k[18]); /* 19 */
-				gg(b, c, d, a, x[0], s[7], k[19]);  /* 20 */
-				gg(a, b, c, d, x[5], s[4], k[20]);  /* 21 */
-				gg(d, a, b, c, x[10], s[5], k[21]); /* 22 */
-				gg(c, d, a, b, x[15], s[6], k[22]); /* 23 */
-				gg(b, c, d, a, x[4], s[7], k[23]);  /* 24 */
-				gg(a, b, c, d, x[9], s[4], k[24]);  /* 25 */
-				gg(d, a, b, c, x[14], s[5], k[25]); /* 26 */
-				gg(c, d, a, b, x[3], s[6], k[26]);  /* 27 */
-				gg(b, c, d, a, x[8], s[7], k[27]);  /* 28 */
-				gg(a, b, c, d, x[13], s[4], k[28]); /* 29 */
-				gg(d, a, b, c, x[2], s[5], k[29]);  /* 30 */
-				gg(c, d, a, b, x[7], s[6], k[30]);  /* 31 */
-				gg(b, c, d, a, x[12], s[7], k[31]); /* 32 */
+				Step(G, A, B, C, D, buffer[1] + K[16], S[4]);  /* 17 */
+				Step(G, D, A, B, C, buffer[6] + K[17], S[5]);  /* 18 */
+				Step(G, C, D, A, B, buffer[11] + K[18], S[6]); /* 19 */
+				Step(G, B, C, D, A, buffer[0] + K[19], S[7]);  /* 20 */
+				Step(G, A, B, C, D, buffer[5] + K[20], S[4]);  /* 21 */
+				Step(G, D, A, B, C, buffer[10] + K[21], S[5]); /* 22 */
+				Step(G, C, D, A, B, buffer[15] + K[22], S[6]); /* 23 */
+				Step(G, B, C, D, A, buffer[4] + K[23], S[7]);  /* 24 */
+				Step(G, A, B, C, D, buffer[9] + K[24], S[4]);  /* 25 */
+				Step(G, D, A, B, C, buffer[14] + K[25], S[5]); /* 26 */
+				Step(G, C, D, A, B, buffer[3] + K[26], S[6]);  /* 27 */
+				Step(G, B, C, D, A, buffer[8] + K[27], S[7]);  /* 28 */
+				Step(G, A, B, C, D, buffer[13] + K[28], S[4]); /* 29 */
+				Step(G, D, A, B, C, buffer[2] + K[29], S[5]);  /* 30 */
+				Step(G, C, D, A, B, buffer[7] + K[30], S[6]);  /* 31 */
+				Step(G, B, C, D, A, buffer[12] + K[31], S[7]); /* 32 */
 
 				/* Round 3 */
-				hh(a, b, c, d, x[5], s[8], k[32]);   /* 33 */
-				hh(d, a, b, c, x[8], s[9], k[33]);   /* 34 */
-				hh(c, d, a, b, x[11], s[10], k[34]); /* 35 */
-				hh(b, c, d, a, x[14], s[11], k[35]); /* 36 */
-				hh(a, b, c, d, x[1], s[8], k[36]);   /* 37 */
-				hh(d, a, b, c, x[4], s[9], k[37]);   /* 38 */
-				hh(c, d, a, b, x[7], s[10], k[38]);  /* 39 */
-				hh(b, c, d, a, x[10], s[11], k[39]); /* 40 */
-				hh(a, b, c, d, x[13], s[8], k[40]);  /* 41 */
-				hh(d, a, b, c, x[0], s[9], k[41]);   /* 42 */
-				hh(c, d, a, b, x[3], s[10], k[42]);  /* 43 */
-				hh(b, c, d, a, x[6], s[11], k[43]);  /* 44 */
-				hh(a, b, c, d, x[9], s[8], k[44]);   /* 45 */
-				hh(d, a, b, c, x[12], s[9], k[45]);  /* 46 */
-				hh(c, d, a, b, x[15], s[10], k[46]); /* 47 */
-				hh(b, c, d, a, x[2], s[11], k[47]);  /* 48 */
+				Step(parity, A, B, C, D, buffer[5] + K[32], S[8]);   /* 33 */
+				Step(parity, D, A, B, C, buffer[8] + K[33], S[9]);   /* 34 */
+				Step(parity, C, D, A, B, buffer[11] + K[34], S[10]); /* 35 */
+				Step(parity, B, C, D, A, buffer[14] + K[35], S[11]); /* 36 */
+				Step(parity, A, B, C, D, buffer[1] + K[36], S[8]);   /* 37 */
+				Step(parity, D, A, B, C, buffer[4] + K[37], S[9]);   /* 38 */
+				Step(parity, C, D, A, B, buffer[7] + K[38], S[10]);  /* 39 */
+				Step(parity, B, C, D, A, buffer[10] + K[39], S[11]); /* 40 */
+				Step(parity, A, B, C, D, buffer[13] + K[40], S[8]);  /* 41 */
+				Step(parity, D, A, B, C, buffer[0] + K[41], S[9]);   /* 42 */
+				Step(parity, C, D, A, B, buffer[3] + K[42], S[10]);  /* 43 */
+				Step(parity, B, C, D, A, buffer[6] + K[43], S[11]);  /* 44 */
+				Step(parity, A, B, C, D, buffer[9] + K[44], S[8]);   /* 45 */
+				Step(parity, D, A, B, C, buffer[12] + K[45], S[9]);  /* 46 */
+				Step(parity, C, D, A, B, buffer[15] + K[46], S[10]); /* 47 */
+				Step(parity, B, C, D, A, buffer[2] + K[47], S[11]);  /* 48 */
 
 				/* Round 4 */
-				ii(a, b, c, d, x[0], s[12], k[48]);  /* 49 */
-				ii(d, a, b, c, x[7], s[13], k[49]);  /* 50 */
-				ii(c, d, a, b, x[14], s[14], k[50]); /* 51 */
-				ii(b, c, d, a, x[5], s[15], k[51]);  /* 52 */
-				ii(a, b, c, d, x[12], s[12], k[52]); /* 53 */
-				ii(d, a, b, c, x[3], s[13], k[53]);  /* 54 */
-				ii(c, d, a, b, x[10], s[14], k[54]); /* 55 */
-				ii(b, c, d, a, x[1], s[15], k[55]);  /* 56 */
-				ii(a, b, c, d, x[8], s[12], k[56]);  /* 57 */
-				ii(d, a, b, c, x[15], s[13], k[57]); /* 58 */
-				ii(c, d, a, b, x[6], s[14], k[58]);  /* 59 */
-				ii(b, c, d, a, x[13], s[15], k[59]); /* 60 */
-				ii(a, b, c, d, x[4], s[12], k[60]);  /* 61 */
-				ii(d, a, b, c, x[11], s[13], k[61]); /* 62 */
-				ii(c, d, a, b, x[2], s[14], k[62]);  /* 63 */
-				ii(b, c, d, a, x[9], s[15], k[63]);  /* 64 */
+				Step(I, A, B, C, D, buffer[0] + K[48], S[12]);  /* 49 */
+				Step(I, D, A, B, C, buffer[7] + K[49], S[13]);  /* 50 */
+				Step(I, C, D, A, B, buffer[14] + K[50], S[14]); /* 51 */
+				Step(I, B, C, D, A, buffer[5] + K[51], S[15]);  /* 52 */
+				Step(I, A, B, C, D, buffer[12] + K[52], S[12]); /* 53 */
+				Step(I, D, A, B, C, buffer[3] + K[53], S[13]);  /* 54 */
+				Step(I, C, D, A, B, buffer[10] + K[54], S[14]); /* 55 */
+				Step(I, B, C, D, A, buffer[1] + K[55], S[15]);  /* 56 */
+				Step(I, A, B, C, D, buffer[8] + K[56], S[12]);  /* 57 */
+				Step(I, D, A, B, C, buffer[15] + K[57], S[13]); /* 58 */
+				Step(I, C, D, A, B, buffer[6] + K[58], S[14]);  /* 59 */
+				Step(I, B, C, D, A, buffer[13] + K[59], S[15]); /* 60 */
+				Step(I, A, B, C, D, buffer[4] + K[60], S[12]);  /* 61 */
+				Step(I, D, A, B, C, buffer[11] + K[61], S[13]); /* 62 */
+				Step(I, C, D, A, B, buffer[2] + K[62], S[14]);  /* 63 */
+				Step(I, B, C, D, A, buffer[9] + K[63], S[15]);  /* 64 */
 
-				m_digest[0] += a;
-				m_digest[1] += b;
-				m_digest[2] += c;
-				m_digest[3] += d;
+				m_digest[0] += A;
+				m_digest[1] += B;
+				m_digest[2] += C;
+				m_digest[3] += D;
 			}
 
-			void encode(std::span<std::uint8_t, 16> output, std::uint32_t* input, std::size_t len) {
-				for (std::size_t i = 0, j = 0; j < len; i++, j += 4) {
-					output[j] = static_cast<std::uint8_t>(input[i]) & 0xff;
-					output[j + 1] = static_cast<std::uint8_t>(input[i] >> 8) & 0xff;
-					output[j + 2] = static_cast<std::uint8_t>(input[i] >> 16) & 0xff;
-					output[j + 3] = static_cast<std::uint8_t>(input[i] >> 24) & 0xff;
+			constexpr void encode(std::span<std::uint8_t> output, std::span<std::uint32_t> input) {
+				if consteval {
+					for (std::size_t i = 0, j = 0; j < input.size(); i++, j += 4) {
+						output[j] = static_cast<std::uint8_t>(input[i]) & 0xff;
+						output[j + 1] = static_cast<std::uint8_t>(input[i] >> 8) & 0xff;
+						output[j + 2] = static_cast<std::uint8_t>(input[i] >> 16) & 0xff;
+						output[j + 3] = static_cast<std::uint8_t>(input[i] >> 24) & 0xff;
+					}
+				}
+				else {
+					std::memcpy(output.data(), input.data(), input.size());
 				}
 			}
 
-			void decode(std::uint32_t* output, std::uint8_t* input, std::size_t len) {
-				for (std::size_t i = 0, j = 0; j < len; i++, j += 4) {
-					output[i] = static_cast<std::uint32_t>(input[j]) |
-						static_cast<std::uint32_t>(input[j + 1]) << 8 |
-						static_cast<std::uint32_t>(input[j + 2]) << 16 |
-						static_cast<std::uint32_t>(input[j + 3]) << 24;
+			constexpr void decode(
+				std::span<std::uint32_t, 16> output,
+				std::span<std::uint8_t, MessageBlockSize> input) {
+				if consteval {
+					for (std::size_t i = 0, j = 0; j < input.size(); i++, j += 4) {
+						output[i] = static_cast<std::uint32_t>(input[j]) |
+							static_cast<std::uint32_t>(input[j + 1]) << 8 |
+							static_cast<std::uint32_t>(input[j + 2]) << 16 |
+							static_cast<std::uint32_t>(input[j + 3]) << 24;
+					}
+				}
+				else {
+					std::memcpy(output.data(), input.data(), input.size());
 				}
 			}
 		};

@@ -5,10 +5,13 @@ export module toria.crypto:hash;
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
-#include <iostream>
+#include <fstream>
+#include <istream>
 #include <memory>
 #include <span>
+#include <array>
 #include <string_view>
+#include <stop_token>
 #else
 import std;
 import :common;
@@ -18,8 +21,8 @@ namespace toria
 {
 	namespace crypto
 	{
-		export template<HashAlgo HashAlgo>
-		class hash : public HashAlgo
+		export template<is_hashing_algorithm is_hashing_algorithm>
+		class hash : public is_hashing_algorithm
 		{
 		public:
 			constexpr hash() noexcept { this->reset(); }
@@ -27,7 +30,6 @@ namespace toria
 			template<class CharType, class Traits>
 			constexpr void hashString(std::basic_string_view<CharType, Traits> str) {
 				this->reset();
-				std::span<const std::byte> bytes;
 				if consteval {
 					std::vector<std::byte> tempBytes{};
 					tempBytes.resize(str.size() * sizeof(CharType));
@@ -38,14 +40,10 @@ namespace toria
 							tempBytes[i + charSize] = std::byte((c >> (8 * charSize)) & 0xff);
 						}
 					}
-					bytes = std::span<const std::byte>(tempBytes);
-					this->update(bytes);
+					this->update({tempBytes});
 				}
 				else {
-					bytes = std::span<const std::byte>(
-						reinterpret_cast<const std::byte*>(str.data()),
-						str.size() * sizeof(CharType));
-					this->update(bytes);
+					this->update(std::as_bytes(std::span{str.data(), str.size()}));
 				}
 				this->finalize();
 			}
@@ -57,6 +55,13 @@ namespace toria
 				this->reset();
 				if (!stream.is_open())
 					return;
+				std::array<CharType, 4096> buffer{};
+				auto bytesRead = stream.read(buffer.data(),buffer.size());
+				while(bytesRead > 0) {
+					this->update(std::as_bytes(std::span(buffer)));
+					bytesRead = stream.read(buffer.data(), buffer.size());
+				}
+				this->finalize();
 			}
 
 			void hashFile(std::filesystem::path& path) {
@@ -64,13 +69,13 @@ namespace toria
 					throw;
 				else if (std::filesystem::is_directory(path))
 					return false;
-				std::ifstream stream{path, std::ios::in | std::ios::binary};
-				this->hashStream(stream);
+				std::ifstream stream{path,std::ios::binary};
+				return this->hashStream(stream);
 			}
 
 			template<std::size_t Bytes>
 			constexpr hash_err get_bytes(std::span<std::byte, Bytes> bytesOut) const
-				requires (Bytes <= HashAlgo::HashSize)
+				requires (Bytes <= is_hashing_algorithm::HashSize)
 			{
 				return this->get_digest(bytesOut);
 			}

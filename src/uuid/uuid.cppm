@@ -27,7 +27,7 @@ namespace toria
 		export constexpr uuid namespace_x500{"6ba7b814-9dad-11d1-80b4-00c04fd430c8"};
 
 		// export using v1 = generators::v1_generator;
-		//export using v3 = generators::name_generator<3, crypto::md5>;
+		export using v3 = generators::name_generator<uuid::version_type::v3, crypto::md5>;
 		export using v4 = generators::v4_generator<std::mt19937_64>;
 		export using v5 = generators::name_generator<uuid::version_type::v5, crypto::sha1>;
 		export using v7 = generators::v7_generator<std::mt19937_64>;

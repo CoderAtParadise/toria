@@ -2,14 +2,15 @@ export module toria.crypto:sha1;
 
 #ifdef __INTELLISENSE__
 #include "common.cppm"
+#include <array>
 #include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <span>
-#include <array>
 #else
 import std;
 import :common;
+import toria.util;
 #endif  // __INTELLISENSE__
 
 namespace toria
@@ -22,7 +23,7 @@ namespace toria
 			static constexpr std::size_t HashSize = 5 * sizeof(std::uint32_t);
 			static constexpr std::size_t HashSizeBits = HashSize * 8;
 			static constexpr std::size_t MessageBlockSize = 64;
-
+			constexpr sha1() noexcept { this->reset(); }
 			constexpr void reset() noexcept {
 				m_digest[0] = 0x67452301;
 				m_digest[1] = 0xEFCDAB89;
@@ -35,17 +36,7 @@ namespace toria
 				m_finalized = false;
 			}
 
-			constexpr hash_err update(std::byte byte) noexcept {
-				if (m_finalized)
-					return hash_err::ALREADY_FINALIZED;
-				m_messageBlock[m_messageBlockIndex++] = std::to_integer<std::uint8_t>(byte);
-				++m_messageLength;
-				if (m_messageBlockIndex == MessageBlockSize) {
-					m_messageBlockIndex = 0;
-					update_block();
-				}
-				return hash_err::SUCCESS;
-			}
+			constexpr hash_err update(std::byte byte) noexcept { return this->update(byte, false); }
 
 			constexpr hash_err update(const std::span<const std::byte> bytes) noexcept {
 				if (m_finalized)
@@ -63,25 +54,25 @@ namespace toria
 					return hash_err::ALREADY_FINALIZED;
 				m_finalized = true;
 				const std::size_t bitCount = m_messageLength * 8;
-				update(std::byte(0x80));
+				update(std::byte(0x80), true);
 				if (m_messageBlockIndex > 56) {
 					while (m_messageBlockIndex != 0)
-						update(std::byte(0));
+						update(std::byte(0), true);
 					while (m_messageBlockIndex < 56)
-						update(std::byte(0));
+						update(std::byte(0), true);
 				}
 				else {
 					while (m_messageBlockIndex < 56)
-						update(std::byte(0));
+						update(std::byte(0), true);
 				}
-				update(std::byte(0));
-				update(std::byte(0));
-				update(std::byte(0));
-				update(std::byte(0));
-				update(std::byte((bitCount >> 24) & 0xFF));
-				update(std::byte((bitCount >> 16) & 0xFF));
-				update(std::byte((bitCount >> 8) & 0xFF));
-				update(std::byte(bitCount & 0xFF));
+				update(std::byte(0), true);
+				update(std::byte(0), true);
+				update(std::byte(0), true);
+				update(std::byte(0), true);
+				update(std::byte((bitCount >> 16) & 0xFF), true);
+				update(std::byte((bitCount >> 24) & 0xFF), true);
+				update(std::byte((bitCount >> 8) & 0xFF), true);
+				update(std::byte(bitCount & 0xFF), true);
 				for (std::size_t idx = 0; idx < HashSize / sizeof(std::uint32_t); idx++) {
 					m_digest[idx] = std::byteswap(m_digest[idx]);
 				}
@@ -91,18 +82,8 @@ namespace toria
 			constexpr hash_err get_digest(std::span<std::byte> bytesOut) const noexcept {
 				if (!m_finalized)
 					return hash_err::NOT_FINALIZED;
-				std::size_t count = bytesOut.size() / sizeof(std::uint32_t);
-				if consteval {
-					for (std::size_t idx = 0; idx < count; idx++) {
-						bytesOut[idx * 4] = std::byte(m_digest[idx] & 0xFF);
-						bytesOut[idx * 4 + 1] = std::byte((m_digest[idx] >> 8) & 0xFF);
-						bytesOut[idx * 4 + 2] = std::byte((m_digest[idx] >> 16) & 0xFF);
-						bytesOut[idx * 4 + 3] = std::byte((m_digest[idx] >> 24) & 0xFF);
-					}
-				}
-				else {
-					std::memcpy(bytesOut.data(), m_digest.data(), bytesOut.size());
-				}
+				std::span<const std::uint32_t> digest{m_digest};
+				util::copy_bytes(bytesOut, digest);
 				return hash_err::SUCCESS;
 			}
 
@@ -111,11 +92,23 @@ namespace toria
 			std::uint16_t m_messageBlockIndex;
 			bool m_finalized = false;
 			std::size_t m_messageLength;
-			std::array<std::uint8_t,MessageBlockSize> m_messageBlock{};
+			std::array<std::uint8_t, MessageBlockSize> m_messageBlock{};
 
 		private:
+			constexpr hash_err update(std::byte byte, bool finalizing) {
+				if (m_finalized && !finalizing)
+					return hash_err::ALREADY_FINALIZED;
+				m_messageBlock[m_messageBlockIndex++] = std::to_integer<std::uint8_t>(byte);
+				++m_messageLength;
+				if (m_messageBlockIndex == MessageBlockSize) {
+					m_messageBlockIndex = 0;
+					update_block();
+				}
+				return hash_err::SUCCESS;
+			}
+
 			constexpr void update_block() noexcept {
-				std::array<std::uint32_t,80> w{};
+				std::array<std::uint32_t, 80> w{};
 				std::size_t idx = 0;
 				for (idx; idx < 16; idx++) {
 					w[idx] = static_cast<std::uint32_t>(m_messageBlock[idx * 4 + 0] << 24);
@@ -135,22 +128,18 @@ namespace toria
 
 					if (idx < 20) {
 						f = ch(B, C, D);  // SHA_Ch
-						//f = (B & C) | (~B & D);
 						k = 0x5A827999;
 					}
 					else if (idx < 40) {
 						f = parity(B, C, D);  // SHA_PARITY
-						//f = B ^ C ^ D;
 						k = 0x6ED9EBA1;
 					}
 					else if (idx < 60) {
 						f = maj(B, C, D);  // SHA_Maj
-						//f = (B & C) | (B & D) | (C & D);
 						k = 0x8F1BBCDC;
 					}
 					else {
 						f = parity(B, C, D);
-						//f = B ^ C ^ D;
 						k = 0xCA62C1D6;
 					}
 

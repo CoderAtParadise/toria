@@ -52,7 +52,7 @@ namespace toria
 				Engine* m_generator;
 			};
 
-			export template<uuid::version_type Version, toria::crypto::HashAlgo HashAlgo>
+			export template<uuid::version_type Version, toria::crypto::is_hashing_algorithm is_hashing_algorithm>
 			class name_generator
 			{
 			public:
@@ -61,7 +61,7 @@ namespace toria
 
 				template<class CharType, class Traits>
 				[[nodiscard]] constexpr uuid operator()(std::basic_string_view<CharType, Traits> str) const {
-					toria::crypto::hash<HashAlgo> hash{};
+					toria::crypto::hash<is_hashing_algorithm> hash{};
 					hash.update(m_namespace_uuid.bytes());
 
 					for (std::uint32_t substring : str) {
