@@ -2,6 +2,7 @@ export module toria.crypto:md5;
 #ifdef __INTELLISENSE__
 #include "common.cppm"
 #include <array>
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -47,7 +48,7 @@ namespace toria
 					return hash_err::ALREADY_FINALIZED;
 				m_finalized = true;
 				std::size_t used = (m_bits[0] >> 3) & 0x3F;
-				std::size_t count = 64u - 1u - used ;
+				std::size_t count = 64u - 1u - used;
 				std::span<std::uint8_t> block{m_block};
 				block[used++] = 0x80;
 				if (count < 8) {
@@ -58,7 +59,7 @@ namespace toria
 				else
 					util::fill_bytes(block.subspan(used), 0, count - 8);
 				std::span<const std::uint32_t> countBytes{m_bits};
-				util::copy_bytes(block.subspan(56),countBytes);
+				util::copy_bytes(block.subspan(56), countBytes);
 				transform();
 				return hash_err::SUCCESS;
 			}
@@ -102,7 +103,7 @@ namespace toria
 				std::uint32_t data,
 				std::uint32_t S) {
 				w += f(x, y, z) + data;
-				w = left_rotate(w, S);
+				w = std::rotl(w, S);
 				w += x;
 			}
 

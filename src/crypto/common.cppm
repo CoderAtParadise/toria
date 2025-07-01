@@ -31,11 +31,6 @@ namespace toria
 			{ algo.get_digest(std::declval<std::span<std::byte>>()) } -> std::same_as<hash_err>;
 		};
 
-		export constexpr std::uint32_t
-		left_rotate(std::uint32_t value, const std::size_t count) noexcept {
-			return (value << count) ^ (value >> (32 - count));
-		}
-
 		export constexpr std::uint32_t parity(std::uint32_t x, std::uint32_t y, std::uint32_t z) {
 			return x ^ y ^ z;
 		}

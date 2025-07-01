@@ -118,7 +118,7 @@ namespace toria
 				}
 
 				for (idx = 16; idx < 80; idx++) {
-					w[idx] = left_rotate((w[idx - 3] ^ w[idx - 8] ^ w[idx - 14] ^ w[idx - 16]), 1);
+					w[idx] = std::rotl((w[idx - 3] ^ w[idx - 8] ^ w[idx - 14] ^ w[idx - 16]), 1);
 				}
 				auto [A, B, C, D, E] = m_digest;
 
@@ -143,10 +143,10 @@ namespace toria
 						k = 0xCA62C1D6;
 					}
 
-					std::uint32_t temp = left_rotate(A, 5) + f + E + k + w[idx];
+					std::uint32_t temp = std::rotl(A, 5) + f + E + k + w[idx];
 					E = D;
 					D = C;
-					C = left_rotate(B, 30);
+					C = std::rotl(B, 30);
 					B = A;
 					A = temp;
 				}
