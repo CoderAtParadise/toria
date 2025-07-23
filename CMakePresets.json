@@ -17,6 +17,11 @@
       "name": "windows_base",
       "hidden": true,
       "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
           "hostOS": [
@@ -28,6 +33,11 @@
     {
       "name": "linux_base",
       "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
           "hostOS": [
@@ -42,6 +52,11 @@
     {
       "name": "macos_base",
       "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "macOS"
+      },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
           "hostOS": [
@@ -73,6 +88,7 @@
     },
     {
       "name": "windows_clang",
+      "hidden": true,
       "inherits": "windows_base",
       "displayName": "Clang",
       "cacheVariables": {
@@ -146,24 +162,6 @@
       "displayName": "Quality Assurance",
       "configurePreset": "windows_msvc_asan",
       "configuration": "RelWithDebInfo"
-    },
-    {
-      "name": "windows_debug_clang",
-      "displayName": "Debug",
-      "configurePreset": "windows_clang",
-      "configuration": "Debug"
-    },
-    {
-      "name": "windows_release_clang",
-      "displayName": "Release",
-      "configurePreset": "windows_clang",
-      "configuration": "RelWithDebInfo"
-    },
-    {
-      "name": "windows_dist_clang",
-      "displayName": "Distribution",
-      "configurePreset": "windows_clang",
-      "configuration": "Release"
     },
     {
       "name": "linux_debug_clang",
