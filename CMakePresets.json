@@ -1,10 +1,21 @@
 {
-  "version": 6,
+  "$schema": "https://cmake.org/cmake/help/latest/_downloads/3e2d73bff478d88a7de0de736ba5e361/schema.json",
+  "$comment": [
+    "Set version to 9 for Visual Studio's built in cmake support",
+    "Should be 10 for $comment and cmakeMinimumRequired support",
+    "But Visual Studio doesn't seem to care"
+  ],
+  "version": 9,
+  "cmakeMinimumRequired": {
+    "major": 4,
+    "minor": 1,
+    "patch": 0
+  },
   "configurePresets": [
     {
       "name": "base",
       "hidden": true,
-      "generator": "Ninja Multi-Config",
+      "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
       "architecture": {
@@ -14,6 +25,12 @@
       "cacheVariables": { "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}" }
     },
     {
+      "$comment": [
+        "Windows Configurations:",
+        "MSVC",
+        "MSVC | ASAN",
+        "Clang"
+      ],
       "name": "windows_base",
       "hidden": true,
       "inherits": "base",
@@ -31,6 +48,42 @@
       }
     },
     {
+      "name": "windows_msvc",
+      "inherits": "windows_base",
+      "displayName": "MSVC",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "cl"
+      }
+    },
+    {
+      "name": "windows_msvc_asan",
+      "inherits": "windows_msvc",
+      "displayName": "MSVC | ASAN",
+      "environment": {
+        "CXXFLAGS": "/fsanitize=address"
+      }
+    },
+    {
+      "name": "windows_clang",
+      "hidden": true,
+      "inherits": "windows_base",
+      "displayName": "Clang",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang-cl"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "intelliSenseMode": "windows-clang-x64",
+          "enableClangTidyCodeAnalysis": true
+        }
+      }
+    },
+    {
+      "$comment": [
+        "Linux Configurations:",
+        "GCC",
+        "Clang"
+      ],
       "name": "linux_base",
       "inherits": "base",
       "condition": {
@@ -50,55 +103,15 @@
       }
     },
     {
-      "name": "macos_base",
-      "inherits": "base",
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "macOS"
+      "name": "linux_gcc",
+      "inherits": "linux_base",
+      "displayName": "GCC",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "g++"
       },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "hostOS": [
-            "macOS"
-          ]
-        },
-        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
-          "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
-        }
-      }
-    },
-    {
-      "name": "windows_msvc",
-      "inherits": "windows_base",
-      "displayName": "MSVC",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "cl",
-        "CMAKE_CXX_COMPILER": "cl"
-      }
-    },
-    {
-      "name": "windows_msvc_asan",
-      "inherits": "windows_msvc",
-      "displayName": "MSVC | ASAN",
-      "environment": {
-        "CFLAGS": "/fsanitize=address",
-        "CXXFLAGS": "/fsanitize=address"
-      }
-    },
-    {
-      "name": "windows_clang",
-      "hidden": true,
-      "inherits": "windows_base",
-      "displayName": "Clang",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang-cl",
-        "CMAKE_CXX_COMPILER": "clang-cl"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "intelliSenseMode": "windows-clang-x64",
-          "enableClangTidyCodeAnalysis": true
+          "intelliSenseMode": "linux-gcc-x64"
         }
       }
     },
@@ -107,7 +120,6 @@
       "inherits": "linux_base",
       "displayName": "Clang",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS": "clang-scan-deps"
       },
@@ -118,16 +130,24 @@
       }
     },
     {
-      "name": "linux_gcc",
-      "inherits": "linux_base",
-      "displayName": "GCC",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "gcc",
-        "CMAKE_CXX_COMPILER": "g++"
+      "$comment": [
+        "MacOS Configurations:"
+      ],
+      "name": "macos_base",
+      "inherits": "base",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
       },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
-          "intelliSenseMode": "linux-gcc-x64"
+          "hostOS": [
+            "macOS"
+          ]
+        },
+        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
+          "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
         }
       }
     }
@@ -203,8 +223,10 @@
   "testPresets": [
     {
       "name": "test_windows_msvc",
+      "displayName": "All Tests",
       "configurePreset": "windows_msvc",
-      "configuration": "Debug"
+      "configuration": "Debug",
+      "output": { "outputOnFailure": true }
     },
     {
       "name": "test_windows_clang",
