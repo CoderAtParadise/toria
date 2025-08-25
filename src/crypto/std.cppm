@@ -20,8 +20,8 @@ namespace std
 		}
 
 		auto format(const toria::crypto::hash<is_hashing_algorithm>& hash, std::format_context& ctx) const {
-			std::array<std::byte, is_hashing_algorithm::HashSize> bytes;
-			hash.get_bytes(std::span<std::byte, is_hashing_algorithm::HashSize>(bytes));
+			std::array<std::byte, is_hashing_algorithm::hash_size> bytes;
+			hash.get_bytes(std::span<std::byte, is_hashing_algorithm::hash_size>(bytes));
 			auto context = ctx.out();
 			for (std::byte byte : bytes) {
 				context = format_to(ctx.out(), "{:02x}", std::to_integer<std::uint8_t>(byte));

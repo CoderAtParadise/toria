@@ -20,9 +20,9 @@ namespace toria
 		export class md5
 		{
 		public:
-			static constexpr std::size_t HashSize = 4 * sizeof(std::uint32_t);
-			static constexpr std::size_t HashSizeBits = HashSize * 8;
-			static constexpr std::size_t MessageBlockSize = 64;
+			static constexpr std::size_t hash_size = 4 * sizeof(std::uint32_t);
+			static constexpr std::size_t hash_size_bits = hash_size * 8;
+			static constexpr std::size_t message_block_size = 64;
 			constexpr md5() noexcept { this->reset(); }
 			constexpr void reset() noexcept {
 				m_digest[0] = 0x67452301;
@@ -49,34 +49,35 @@ namespace toria
 				m_finalized = true;
 				std::size_t used = (m_bits[0] >> 3) & 0x3F;
 				std::size_t count = 64u - 1u - used;
-				std::span<std::uint8_t> block{m_block};
+				std::span<std::uint8_t,64> block{m_block};
 				block[used++] = 0x80;
 				if (count < 8) {
-					util::fill_bytes(block.subspan(used), 0, count);
+					util::memset(block.subspan(used), 0, count);
 					transform();
-					util::fill_bytes(block, 0, 56);
+					util::memset(block, 0, 56);
 				}
 				else
-					util::fill_bytes(block.subspan(used), 0, count - 8);
-				std::span<const std::uint32_t> countBytes{m_bits};
-				util::copy_bytes(block.subspan(56), countBytes);
+					util::memset(block.subspan(used), 0, count - 8);
+				std::span<const std::uint32_t,2> countBytes{m_bits};
+				util::memcpy(block.subspan(56), countBytes);
 				transform();
 				return hash_err::SUCCESS;
 			}
 
-			constexpr hash_err get_digest(std::span<std::byte> bytesOut) const noexcept {
+			template<std::size_t Size>
+			constexpr hash_err get_digest(std::span<std::byte,Size> bytesOut) const noexcept {
 				if (!m_finalized)
 					return hash_err::NOT_FINALIZED;
-				std::span<const std::uint32_t> digest{m_digest};
-				util::copy_bytes(bytesOut, digest);
+				std::span<const std::uint32_t,4> digest{m_digest};
+				util::memcpy(bytesOut, digest);
 				return hash_err::SUCCESS;
 			}
 
 		private:
-			std::array<std::uint32_t, HashSize / sizeof(std::uint32_t)> m_digest;
+			std::array<std::uint32_t, hash_size / sizeof(std::uint32_t)> m_digest;
 			std::array<std::uint32_t, 2> m_bits;
 			bool m_finalized = false;
-			std::array<std::uint8_t, MessageBlockSize> m_block{};
+			std::array<std::uint8_t, message_block_size> m_block{};
 
 		private:
 			/*
@@ -122,22 +123,22 @@ namespace toria
 				if (used) {
 					auto offsetBlock = block.subspan(used);
 					if (bytesLen < available) {
-						util::copy_bytes(offsetBlock, bytes);
+						util::memcpy(offsetBlock, bytes);
 						return hash_err::SUCCESS;
 					}
-					util::copy_bytes(offsetBlock, bytes.subspan(0, available));
+					util::memcpy(offsetBlock, bytes.subspan(0, available));
 					transform();
 					bytesOffset += used;
 					bytesLen -= used;
 				}
 				while (bytesLen >= 64) {
-					util::copy_bytes(block, bytes.subspan(bytesOffset, 64));
+					util::memcpy(block, bytes.subspan(bytesOffset, 64));
 					transform();
 					bytesLen -= 64;
 					bytesOffset += 64;
 				}
 				if (bytesLen > 0)
-					util::copy_bytes(block, bytes.subspan(bytesOffset, bytesLen));
+					util::memcpy(block, bytes.subspan(bytesOffset, bytesLen));
 				return hash_err::SUCCESS;
 			}
 
@@ -254,7 +255,7 @@ namespace toria
 
 			constexpr void decode(
 				std::span<std::uint32_t, 16> output,
-				std::span<std::uint8_t, MessageBlockSize> input) {
+				std::span<std::uint8_t, message_block_size> input) {
 				if consteval {
 					for (std::size_t i = 0, j = 0; j < input.size(); i++, j += 4) {
 						output[i] = static_cast<std::uint32_t>(input[j]) |

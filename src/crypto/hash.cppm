@@ -1,6 +1,7 @@
 export module toria.crypto:hash;
 #ifdef __INTELLISENSE__
-#include "common.cppm"
+#include "crypto/common.cppm"
+#include <array>
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -9,12 +10,12 @@ export module toria.crypto:hash;
 #include <istream>
 #include <memory>
 #include <span>
-#include <array>
-#include <string_view>
 #include <stop_token>
+#include <string_view>
 #else
 import std;
 import :common;
+import toria.util;
 #endif  // __INTELLISENSE__
 
 namespace toria
@@ -31,16 +32,8 @@ namespace toria
 			constexpr void hashString(std::basic_string_view<CharType, Traits> str) {
 				this->reset();
 				if consteval {
-					std::vector<std::byte> tempBytes{};
-					tempBytes.resize(str.size() * sizeof(CharType));
-					for (std::size_t i = 0; i < str.size() * sizeof(CharType);
-						 i += sizeof(CharType)) {
-						std::uint32_t c = str[i];
-						for (std::size_t charSize = 0; charSize < sizeof(CharType); ++charSize) {
-							tempBytes[i + charSize] = std::byte((c >> (8 * charSize)) & 0xff);
-						}
-					}
-					this->update({tempBytes});
+					std::span<const std::byte> bytes = util::as_bytes(str);
+					this->update(bytes);
 				}
 				else {
 					this->update(std::as_bytes(std::span{str.data(), str.size()}));
@@ -56,8 +49,8 @@ namespace toria
 				if (!stream.is_open())
 					return;
 				std::array<CharType, 4096> buffer{};
-				auto bytesRead = stream.read(buffer.data(),buffer.size());
-				while(bytesRead > 0) {
+				auto bytesRead = stream.read(buffer.data(), buffer.size());
+				while (bytesRead > 0) {
 					this->update(std::as_bytes(std::span(buffer)));
 					bytesRead = stream.read(buffer.data(), buffer.size());
 				}
@@ -69,13 +62,13 @@ namespace toria
 					throw;
 				else if (std::filesystem::is_directory(path))
 					return false;
-				std::ifstream stream{path,std::ios::binary};
+				std::ifstream stream{path, std::ios::binary};
 				return this->hashStream(stream);
 			}
 
 			template<std::size_t Bytes>
 			constexpr hash_err get_bytes(std::span<std::byte, Bytes> bytesOut) const
-				requires (Bytes <= is_hashing_algorithm::HashSize)
+				requires (Bytes <= is_hashing_algorithm::hash_size)
 			{
 				return this->get_digest(bytesOut);
 			}

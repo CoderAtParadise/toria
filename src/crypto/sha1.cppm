@@ -20,9 +20,9 @@ namespace toria
 		export class sha1
 		{
 		public:
-			static constexpr std::size_t HashSize = 5 * sizeof(std::uint32_t);
-			static constexpr std::size_t HashSizeBits = HashSize * 8;
-			static constexpr std::size_t MessageBlockSize = 64;
+			static constexpr std::size_t hash_size = 5 * sizeof(std::uint32_t);
+			static constexpr std::size_t hash_size_bits = hash_size * 8;
+			static constexpr std::size_t message_block_size = 64;
 			constexpr sha1() noexcept { this->reset(); }
 			constexpr void reset() noexcept {
 				m_digest[0] = 0x67452301;
@@ -73,26 +73,27 @@ namespace toria
 				update(std::byte((bitCount >> 24) & 0xFF), true);
 				update(std::byte((bitCount >> 8) & 0xFF), true);
 				update(std::byte(bitCount & 0xFF), true);
-				for (std::size_t idx = 0; idx < HashSize / sizeof(std::uint32_t); idx++) {
+				for (std::size_t idx = 0; idx < hash_size / sizeof(std::uint32_t); idx++) {
 					m_digest[idx] = std::byteswap(m_digest[idx]);
 				}
 				return hash_err::SUCCESS;
 			}
 
-			constexpr hash_err get_digest(std::span<std::byte> bytesOut) const noexcept {
+			template<std::size_t Size>
+			constexpr hash_err get_digest(std::span<std::byte,Size> bytesOut) const noexcept {
 				if (!m_finalized)
 					return hash_err::NOT_FINALIZED;
-				std::span<const std::uint32_t> digest{m_digest};
-				util::copy_bytes(bytesOut, digest);
+				std::span<const std::uint32_t,5> digest{m_digest};
+				util::memcpy(bytesOut, digest);
 				return hash_err::SUCCESS;
 			}
 
 		private:
-			std::array<std::uint32_t, HashSize / sizeof(std::uint32_t)> m_digest;
+			std::array<std::uint32_t, hash_size / sizeof(std::uint32_t)> m_digest;
 			std::uint16_t m_messageBlockIndex;
 			bool m_finalized = false;
 			std::size_t m_messageLength;
-			std::array<std::uint8_t, MessageBlockSize> m_messageBlock{};
+			std::array<std::uint8_t, message_block_size> m_messageBlock{};
 
 		private:
 			constexpr hash_err update(std::byte byte, bool finalizing) {
@@ -100,7 +101,7 @@ namespace toria
 					return hash_err::ALREADY_FINALIZED;
 				m_messageBlock[m_messageBlockIndex++] = std::to_integer<std::uint8_t>(byte);
 				++m_messageLength;
-				if (m_messageBlockIndex == MessageBlockSize) {
+				if (m_messageBlockIndex == message_block_size) {
 					m_messageBlockIndex = 0;
 					update_block();
 				}

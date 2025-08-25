@@ -18,9 +18,9 @@ namespace toria
 
 		export template<class T>
 		concept is_hashing_algorithm = requires (T algo) {
-			T::HashSize;
-			T::HashSizeBits;
-			T::MessageBlockSize;
+			T::hash_size;
+			T::hash_size_bits;
+			T::message_block_size;
 			{ algo.reset() } -> std::same_as<void>;
 			{
 				algo.update(std::declval<const std::span<const std::byte>>())
