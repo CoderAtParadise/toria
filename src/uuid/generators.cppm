@@ -1,13 +1,17 @@
 export module toria.uuid:generators;
 
 #ifdef __INTELLISENSE__
-#include "impl.cppm"
+#include <algorithm>
 #include <chrono>
 #include <random>
+#include "crypto/common.cppm"
+#include "crypto/hash.cppm"
+#include "uuid/impl.cppm"
 #else
 import std;
 import :impl;
 import toria.crypto;
+import toria.util;
 
 #endif  // __INTELLISENSE__
 
@@ -16,43 +20,89 @@ namespace toria
 	namespace uuid
 	{
 
-		template<class T>
-		concept is_clock = std::chrono::is_clock_v<T>;
-
 		namespace generators
 		{
-			// If made static msvc is saying the definition cannot be found
-			constexpr void set_version_and_variant(std::span<std::byte, 16> bytes, uuid::version_type version) {
-				bytes[6] = (bytes[6] & std::byte(0x0f)) | std::byte(std::to_underlying(version) << 4);
-				bytes[8] = (bytes[8] & std::byte(0x3f)) | std::byte(0x80);
+
+			template<class T>
+			concept is_clock = std::chrono::is_clock_v<T>;
+
+			template<std::uniform_random_bit_generator Engine>
+			static Engine& default_random(std::invoke_result_t<Engine&> seed) {
+				static Engine engine(seed);
+				return engine;
 			}
 
-			export std::mt19937_64& default_random() noexcept {
-				static std::random_device rd;
-				static std::mt19937_64 gen(rd());
-				return gen;
+			template<std::uniform_random_bit_generator Engine>
+			static Engine& default_random() {
+				static std::random_device random_device;
+				return default_random<Engine>(random_device());
 			}
 
-			export template<class Engine>
+			constexpr void set_version_and_variant(
+				std::span<std::byte, 16> bytes,
+				uuid::version_type version,
+				uuid::variant_type variant = uuid::variant_type::rfc_4122) {
+				bytes[6] =
+					(bytes[6] & std::byte(0x0f)) | std::byte(std::to_underlying(version) << 4);
+				bytes[8] =
+					(bytes[8] & std::byte(0x3f)) | std::byte(std::to_underlying(variant) << 4);
+			}
+
+			template<std::uniform_random_bit_generator Engine>
+			void _generate_random_bytes(
+				std::uint64_t* generated,
+				Engine* engine) {
+				using result_type = std::invoke_result_t<Engine&>;
+				std::uniform_int_distribution<result_type> distribution;
+				if constexpr (sizeof(result_type) == 16) {
+					*reinterpret_cast<result_type*>(generated) = distribution(*engine);
+				}
+				else if constexpr (sizeof(result_type) == 8) {
+					generated[0] = distribution(*engine);
+					generated[1] =  distribution(*engine);
+				}
+				else if constexpr (sizeof(result_type) == 4) {
+					*reinterpret_cast<result_type*>(generated)[0] = distribution(*engine);
+					*reinterpret_cast<result_type*>(generated)[1] = distribution(*engine);
+					*reinterpret_cast<result_type*>(generated)[2] = distribution(*engine);
+					*reinterpret_cast<result_type*>(generated)[3] = distribution(*engine);
+				}
+				else if constexpr (sizeof(result_type) == 2) {
+					*reinterpret_cast<result_type*>(generated)[0] = distribution(*engine);
+					*reinterpret_cast<result_type*>(generated)[1] = distribution(*engine);
+					*reinterpret_cast<result_type*>(generated)[2] = distribution(*engine);
+					*reinterpret_cast<result_type*>(generated)[3] = distribution(*engine);
+					*reinterpret_cast<result_type*>(generated)[4] = distribution(*engine);
+					*reinterpret_cast<result_type*>(generated)[5] = distribution(*engine);
+					*reinterpret_cast<result_type*>(generated)[6] = distribution(*engine);
+					*reinterpret_cast<result_type*>(generated)[7] = distribution(*engine);
+				}
+				else
+					static_assert(true,"Unable to generate random bytes");
+			}
+
+			export template<std::uniform_random_bit_generator Engine>
 			class v4_generator
 			{
+
 			public:
-				v4_generator(Engine& engine = default_random())
+				v4_generator(Engine& engine = default_random<Engine>())
 					: m_generator(&engine) {}
 				[[nodiscard]] uuid operator()() noexcept {
-					std::uint64_t generated[2] = {
-						m_distribution(*m_generator), m_distribution(*m_generator)};
-					std::span<std::byte, 16> bytes{reinterpret_cast<std::byte*>(generated), 16};
+					std::uint64_t generated[2]{0,0};
+					_generate_random_bytes(generated,m_generator);
+					std::span<std::byte, 16> bytes = std::as_writable_bytes(std::span<std::uint64_t,2>{generated});
 					set_version_and_variant(bytes, uuid::version_type::v4);
 					return uuid(bytes);
 				}
 
 			private:
-				std::uniform_int_distribution<std::uint64_t> m_distribution;
 				Engine* m_generator;
 			};
 
-			export template<uuid::version_type Version, toria::crypto::is_hashing_algorithm is_hashing_algorithm>
+			export template<
+				uuid::version_type Version,
+				toria::crypto::is_hashing_algorithm is_hashing_algorithm>
 			class name_generator
 			{
 			public:
@@ -60,7 +110,8 @@ namespace toria
 					: m_namespace_uuid(namespace_uuid) {};
 
 				template<class CharType, class Traits>
-				[[nodiscard]] constexpr uuid operator()(std::basic_string_view<CharType, Traits> str) const {
+				[[nodiscard]] constexpr uuid
+				operator()(std::basic_string_view<CharType, Traits> str) const {
 					toria::crypto::hash<is_hashing_algorithm> hash{};
 					hash.update(m_namespace_uuid.bytes());
 
@@ -81,7 +132,7 @@ namespace toria
 					return uuid{bytes};
 				}
 
-				[[nodiscard]]constexpr uuid operator()(std::string_view str) const {
+				[[nodiscard]] constexpr uuid operator()(std::string_view str) const {
 					return operator()<char>(str);
 				}
 
@@ -89,9 +140,11 @@ namespace toria
 				uuid m_namespace_uuid;
 			};
 
-			export template<class Engine>
+			export template<std::uniform_random_bit_generator Engine>
 			class v7_generator
 			{
+				using result_type = std::invoke_result_t<Engine&>;
+
 			public:
 				enum class monotonicity
 				{
@@ -103,16 +156,17 @@ namespace toria
 
 				v7_generator(
 					monotonicity monotonicity = monotonicity::base,
-					Engine& Engine = default_random())
+					Engine& Engine = default_random<Engine>())
 					: m_monotonicity(monotonicity)
 					, m_generator(&Engine) {}
 				// TODO support optional seeded counter
 
 				template<is_clock clock = std::chrono::system_clock>
 				[[nodiscard]] uuid operator()(std::chrono::time_point<clock> point) noexcept {
-					std::uint64_t generated[2] = {
-						m_distribution(*m_generator), m_distribution(*m_generator)};
-					std::span<std::byte, 16> bytes{reinterpret_cast<std::byte*>(generated), 16};
+					std::uint64_t generated[2]{0,0};
+					_generate_random_bytes(generated,m_generator);
+					std::span<std::byte, 16> bytes =
+						std::as_writable_bytes(std::span<std::uint64_t, 2>{generated});
 					std::uint64_t time =
 						std::chrono::time_point_cast<std::chrono::milliseconds>(point)
 							.time_since_epoch()
@@ -141,12 +195,12 @@ namespace toria
 					return uuid(bytes);
 				}
 
+				template<is_clock clock = std::chrono::system_clock>
 				[[nodiscard]] uuid operator()() noexcept {
-					return operator()(std::chrono::system_clock::now());
+					return operator()(clock::now());
 				}
 
 			private:
-				std::uniform_int_distribution<std::uint64_t> m_distribution;
 				Engine* m_generator;
 				monotonicity m_monotonicity;
 			};
