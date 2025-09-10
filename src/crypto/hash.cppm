@@ -14,16 +14,16 @@ export module toria.crypto:hash;
 #include <string_view>
 #else
 import std;
-import :common;
 import toria.util;
+import :common;
 #endif  // __INTELLISENSE__
 
 namespace toria
 {
 	namespace crypto
 	{
-		export template<is_hashing_algorithm is_hashing_algorithm>
-		class hash : public is_hashing_algorithm
+		export template<is_hashing_algorithm hashing_algorithm>
+		class hash : public hashing_algorithm
 		{
 		public:
 			constexpr hash() noexcept { this->reset(); }
@@ -68,7 +68,7 @@ namespace toria
 
 			template<std::size_t Bytes>
 			constexpr hash_err get_bytes(std::span<std::byte, Bytes> bytesOut) const
-				requires (Bytes <= is_hashing_algorithm::hash_size)
+				requires (Bytes <= hashing_algorithm::hash_size)
 			{
 				return this->get_digest(bytesOut);
 			}
