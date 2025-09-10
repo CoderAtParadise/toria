@@ -9,8 +9,8 @@ export module toria.crypto:sha1;
 #include <span>
 #else
 import std;
-import :common;
 import toria.util;
+import :common;
 #endif  // __INTELLISENSE__
 
 namespace toria
