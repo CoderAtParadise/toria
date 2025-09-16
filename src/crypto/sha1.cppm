@@ -80,10 +80,10 @@ namespace toria
 			}
 
 			template<std::size_t Size>
-			constexpr hash_err get_digest(std::span<std::byte,Size> bytesOut) const noexcept {
+			constexpr hash_err get_digest(std::span<std::byte, Size> bytesOut) const noexcept {
 				if (!m_finalized)
 					return hash_err::NOT_FINALIZED;
-				std::span<const std::uint32_t,5> digest{m_digest};
+				std::span<const std::uint32_t, 5> digest{m_digest};
 				util::memcpy(bytesOut, digest);
 				return hash_err::SUCCESS;
 			}

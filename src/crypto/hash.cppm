@@ -68,7 +68,7 @@ namespace toria
 
 			template<std::size_t Bytes>
 			constexpr hash_err get_bytes(std::span<std::byte, Bytes> bytesOut) const
-				requires (Bytes <= hashing_algorithm::hash_size)
+				requires(Bytes <= hashing_algorithm::hash_size)
 			{
 				return this->get_digest(bytesOut);
 			}

@@ -1,6 +1,7 @@
 export module toria.crypto:md5;
 #ifdef __INTELLISENSE__
-#include "common.cppm"
+#include "crypto/common.cppm"
+#include "util/byte_utils.cppm"
 #include <array>
 #include <bit>
 #include <cstddef>
@@ -79,8 +80,8 @@ namespace toria
 			bool m_finalized = false;
 			std::array<std::uint8_t, message_block_size> m_block{};
 
-			static constexpr std::uint32_t S[]{
-				7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21};
+			static constexpr std::uint32_t S[]{7, 12, 17, 22, 5, 9,  14, 20,
+											   4, 11, 16, 23, 6, 10, 15, 21};
 			static constexpr std::uint32_t K[]{
 				0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee, 0xf57c0faf, 0x4787c62a, 0xa8304613,
 				0xfd469501, 0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be, 0x6b901122, 0xfd987193,
@@ -111,12 +112,8 @@ namespace toria
 
 			static constexpr void Step(
 				std::invocable<std::uint32_t, std::uint32_t, std::uint32_t> auto f,
-				std::uint32_t& w,
-				std::uint32_t x,
-				std::uint32_t y,
-				std::uint32_t z,
-				std::uint32_t data,
-				std::uint32_t S) {
+				std::uint32_t& w, std::uint32_t x, std::uint32_t y, std::uint32_t z,
+				std::uint32_t data, std::uint32_t S) {
 				w += f(x, y, z) + data;
 				w = std::rotl(w, S);
 				w += x;
@@ -259,9 +256,9 @@ namespace toria
 				if consteval {
 					for (std::size_t i = 0, j = 0; j < input.size(); i++, j += 4) {
 						output[i] = static_cast<std::uint32_t>(input[j]) |
-							static_cast<std::uint32_t>(input[j + 1]) << 8 |
-							static_cast<std::uint32_t>(input[j + 2]) << 16 |
-							static_cast<std::uint32_t>(input[j + 3]) << 24;
+									static_cast<std::uint32_t>(input[j + 1]) << 8 |
+									static_cast<std::uint32_t>(input[j + 2]) << 16 |
+									static_cast<std::uint32_t>(input[j + 3]) << 24;
 					}
 				}
 				else {

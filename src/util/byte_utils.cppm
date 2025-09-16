@@ -18,7 +18,7 @@ namespace toria
 	{
 		template<class T>
 		concept integral_or_byte = std::integral<std::remove_const_t<T>> ||
-			std::same_as<std::byte, std::remove_const_t<T>>;
+								   std::same_as<std::byte, std::remove_const_t<T>>;
 
 		template<class T>
 		concept is_byte_type = std::same_as<std::byte, std::decay_t<T>>;
@@ -32,7 +32,7 @@ namespace toria
 
 			template<is_byte_type ByteType, std::size_t Size>
 			constexpr byte_wrapper(std::span<ByteType, Size> bytes) noexcept
-				requires (Size >= size_byte)
+				requires(Size >= size_byte)
 			{
 				for (std::size_t idx = 0; idx < size_byte; idx++) {
 					m_bytes[idx] = bytes[idx];
@@ -65,8 +65,7 @@ namespace toria
 			static constexpr std::size_t size_byte = sizeof(T);
 			using byte_type = std::conditional_t<std::is_const_v<T>, const std::byte, std::byte>;
 
-			constexpr byte_wrapper(std::span<T, Size> val) noexcept
-				: m_original(val) {
+			constexpr byte_wrapper(std::span<T, Size> val) noexcept : m_original(val) {
 				m_bytes.resize(val.size_bytes());
 				std::span<std::byte> bytes{m_bytes};
 				for (std::size_t idx = 0; idx < val.size(); idx++) {
@@ -80,7 +79,7 @@ namespace toria
 			constexpr byte_type& operator[](std::size_t idx) noexcept { return m_bytes[idx]; }
 
 			constexpr operator std::span<T, Size>() noexcept
-				requires (!std::is_const_v<T>)
+				requires(!std::is_const_v<T>)
 			{
 				std::span<byte_type, Size> bytes{m_bytes};
 				for (std::size_t idx = 0; idx < m_original.size(); idx++) {
@@ -106,8 +105,7 @@ namespace toria
 		{
 		public:
 			using byte_type = Byte;
-			constexpr byte_wrapper(std::span<byte_type, Size> bytes) noexcept
-				: m_bytes(bytes) {}
+			constexpr byte_wrapper(std::span<byte_type, Size> bytes) noexcept : m_bytes(bytes) {}
 			constexpr operator std::span<byte_type, Size>() noexcept { return m_bytes; }
 			constexpr std::size_t size() noexcept { return m_bytes.size(); }
 			constexpr byte_type& operator[](std::size_t idx) noexcept { return m_bytes[idx]; }
@@ -118,14 +116,14 @@ namespace toria
 
 		export template<class To, std::size_t Size>
 		constexpr To from_bytes(std::span<std::byte, Size> bytes)
-			requires (std::is_trivially_copyable_v<To>)
+			requires(std::is_trivially_copyable_v<To>)
 		{
 			return byte_wrapper<To>(bytes);
 		}
 
 		export template<class To, std::size_t Size>
 		constexpr To from_bytes(std::span<const std::byte, Size> bytes)
-			requires (std::is_trivially_copyable_v<To>)
+			requires(std::is_trivially_copyable_v<To>)
 		{
 			return byte_wrapper<To>(bytes);
 		}

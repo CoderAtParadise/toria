@@ -50,16 +50,14 @@ namespace toria
 			constexpr uuid(std::span<std::byte> bytes) noexcept {
 				std::ranges::copy(bytes, m_bytes.begin());
 			}
-			constexpr uuid(const std::array<std::byte, 16>& arr) noexcept
-				: m_bytes(arr) {}
+			constexpr uuid(const std::array<std::byte, 16>& arr) noexcept : m_bytes(arr) {}
 
 			constexpr uuid(std::forward_iterator auto first, std::forward_iterator auto last) {
 				if (std::distance(first, last) == 16)
 					std::copy(first, last, m_bytes.begin());
 			}
 
-			constexpr uuid(std::ranges::range auto range)
-				: uuid(range.begin(), range.end()) {}
+			constexpr uuid(std::ranges::range auto range) : uuid(range.begin(), range.end()) {}
 
 			constexpr uuid(std::string_view str) noexcept {
 				if (str[0] == '{')
@@ -134,7 +132,9 @@ namespace toria
 
 			constexpr void swap(uuid& rhs) noexcept { m_bytes.swap(rhs.m_bytes); }
 
-			[[nodiscard]] constexpr std::span<const std::byte, 16> bytes() const noexcept { return m_bytes; }
+			[[nodiscard]] constexpr std::span<const std::byte, 16> bytes() const noexcept {
+				return m_bytes;
+			}
 
 			constexpr bool operator==(const uuid& rhs) const noexcept {
 				return this->m_bytes == rhs.m_bytes;

@@ -1,12 +1,12 @@
 export module toria.uuid:generators;
 
 #ifdef __INTELLISENSE__
-#include <algorithm>
-#include <chrono>
-#include <random>
 #include "crypto/common.cppm"
 #include "crypto/hash.cppm"
 #include "uuid/impl.cppm"
+#include <algorithm>
+#include <chrono>
+#include <random>
 #else
 import std;
 import toria.crypto;
@@ -38,8 +38,7 @@ namespace toria
 			}
 
 			constexpr void set_version_and_variant(
-				std::span<std::byte, 16> bytes,
-				uuid::version_type version,
+				std::span<std::byte, 16> bytes, uuid::version_type version,
 				uuid::variant_type variant = uuid::variant_type::rfc_4122) {
 				bytes[6] =
 					(bytes[6] & std::byte(0x0f)) | std::byte(std::to_underlying(version) << 4);
@@ -48,9 +47,7 @@ namespace toria
 			}
 
 			template<std::uniform_random_bit_generator Engine>
-			void _generate_random_bytes(
-				std::uint64_t* generated,
-				Engine* engine) {
+			void _generate_random_bytes(std::uint64_t* generated, Engine* engine) {
 				using result_type = std::invoke_result_t<Engine&>;
 				std::uniform_int_distribution<result_type> distribution;
 				if constexpr (sizeof(result_type) == 16) {
@@ -58,7 +55,7 @@ namespace toria
 				}
 				else if constexpr (sizeof(result_type) == 8) {
 					generated[0] = distribution(*engine);
-					generated[1] =  distribution(*engine);
+					generated[1] = distribution(*engine);
 				}
 				else if constexpr (sizeof(result_type) == 4) {
 					*reinterpret_cast<result_type*>(generated)[0] = distribution(*engine);
@@ -77,20 +74,19 @@ namespace toria
 					*reinterpret_cast<result_type*>(generated)[7] = distribution(*engine);
 				}
 				else
-					static_assert(true,"Unable to generate random bytes");
+					static_assert(true, "Unable to generate random bytes");
 			}
 
 			export template<std::uniform_random_bit_generator Engine>
 			class v4_generator
 			{
-
 			public:
-				v4_generator(Engine& engine = default_random<Engine>())
-					: m_generator(&engine) {}
+				v4_generator(Engine& engine = default_random<Engine>()) : m_generator(&engine) {}
 				[[nodiscard]] uuid operator()() noexcept {
-					std::uint64_t generated[2]{0,0};
-					_generate_random_bytes(generated,m_generator);
-					std::span<std::byte, 16> bytes = std::as_writable_bytes(std::span<std::uint64_t,2>{generated});
+					std::uint64_t generated[2]{0, 0};
+					_generate_random_bytes(generated, m_generator);
+					std::span<std::byte, 16> bytes =
+						std::as_writable_bytes(std::span<std::uint64_t, 2>{generated});
 					set_version_and_variant(bytes, uuid::version_type::v4);
 					return uuid(bytes);
 				}
@@ -100,8 +96,7 @@ namespace toria
 			};
 
 			export template<
-				uuid::version_type Version,
-				toria::crypto::is_hashing_algorithm hashing_algorithm>
+				uuid::version_type Version, toria::crypto::is_hashing_algorithm hashing_algorithm>
 			class name_generator
 			{
 			public:
@@ -156,14 +151,13 @@ namespace toria
 				v7_generator(
 					monotonicity monotonicity = monotonicity::base,
 					Engine& Engine = default_random<Engine>())
-					: m_monotonicity(monotonicity)
-					, m_generator(&Engine) {}
+					: m_monotonicity(monotonicity), m_generator(&Engine) {}
 				// TODO support optional seeded counter
 
 				template<is_clock clock = std::chrono::system_clock>
 				[[nodiscard]] uuid operator()(std::chrono::time_point<clock> point) noexcept {
-					std::uint64_t generated[2]{0,0};
-					_generate_random_bytes(generated,m_generator);
+					std::uint64_t generated[2]{0, 0};
+					_generate_random_bytes(generated, m_generator);
 					std::span<std::byte, 16> bytes =
 						std::as_writable_bytes(std::span<std::uint64_t, 2>{generated});
 					std::uint64_t time =
@@ -187,8 +181,10 @@ namespace toria
 						bytes[6] = precision >> 8;
 						bytes[7] = precision;
 					}
-					else if (m_monotonicity == monotonicity::counter) {}
-					if (m_monotonicity == monotonicity::sub_milli_counter) {}
+					else if (m_monotonicity == monotonicity::counter) {
+					}
+					if (m_monotonicity == monotonicity::sub_milli_counter) {
+					}
 
 					set_version_and_variant(bytes, uuid::version_type::v7);
 					return uuid(bytes);

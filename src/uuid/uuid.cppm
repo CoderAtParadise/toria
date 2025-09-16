@@ -2,7 +2,9 @@ export module toria.uuid;
 #ifdef __INTELLISENSE__
 #include "uuid/generators.cppm"
 #include "uuid/impl.cppm"
+#include <random>
 #else
+import std;
 import toria.crypto;
 export import :impl;
 export import :generators;

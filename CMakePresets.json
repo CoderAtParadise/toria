@@ -173,15 +173,21 @@
     },
     {
       "name": "windows_debug_msvc_asan",
-      "displayName": "Debug",
+      "displayName": "Debug ASAN",
       "configurePreset": "windows_msvc_asan",
       "configuration": "Debug"
     },
     {
       "name": "windows_qa_msvc_asan",
-      "displayName": "Quality Assurance",
+      "displayName": "Quality Assurance ASAN",
       "configurePreset": "windows_msvc_asan",
       "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "windows_release_msvc_asan",
+      "displayName": "Release ASAN",
+      "configurePreset": "windows_msvc_asan",
+      "configuration": "Release"
     },
     {
       "name": "linux_debug_clang",

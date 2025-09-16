@@ -1,9 +1,9 @@
 export module toria.crypto:std;
 #ifdef __INTELLISENSE__
+#include "crypto/hash.cppm"
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include "crypto/hash.cppm"
 #else
 import std;
 import :common;
@@ -15,11 +15,10 @@ namespace std
 	template<toria::crypto::is_hashing_algorithm hashing_algorithm>
 	struct formatter<toria::crypto::hash<hashing_algorithm>>
 	{
-		constexpr auto parse(std::format_parse_context& ctx) {
-			return ctx.begin();
-		}
+		constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
 
-		auto format(const toria::crypto::hash<hashing_algorithm>& hash, std::format_context& ctx) const {
+		auto
+		format(const toria::crypto::hash<hashing_algorithm>& hash, std::format_context& ctx) const {
 			std::array<std::byte, hashing_algorithm::hash_size> bytes;
 			hash.get_bytes(std::span<std::byte, hashing_algorithm::hash_size>(bytes));
 			auto context = ctx.out();
