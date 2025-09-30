@@ -5,7 +5,7 @@
     "Should be 10 for $comment and cmakeMinimumRequired support",
     "But Visual Studio doesn't seem to care"
   ],
-  "version": 9,
+  "version": 10,
   "cmakeMinimumRequired": {
     "major": 4,
     "minor": 1,
@@ -59,8 +59,8 @@
       "name": "windows_msvc_asan",
       "inherits": "windows_msvc",
       "displayName": "MSVC | ASAN",
-      "environment": {
-        "CXXFLAGS": "/fsanitize=address"
+      "cacheVariables": {
+        "ASAN": true
       }
     },
     {
@@ -116,6 +116,14 @@
       }
     },
     {
+      "name": "linux_gcc_asan",
+      "inherits": "linux_gcc",
+      "displayName": "GCC | ASAN",
+      "cacheVariables": {
+        "ASAN": true
+      }
+    },
+    {
       "name": "linux_clang",
       "inherits": "linux_base",
       "displayName": "Clang",
@@ -127,6 +135,14 @@
         "microsoft.com/VisualStudioSettings/CMake/1.0": {
           "intelliSenseMode": "windows-clang-x64"
         }
+      }
+    },
+    {
+      "name": "linux_clang_asan",
+      "inherits": "linux_clang",
+      "displayName": "Clang | ASAN",
+      "cacheVariables": {
+        "ASAN": true
       }
     },
     {

@@ -12,38 +12,22 @@ set(CMAKE_CXX_MODULE_STD 1)
 add_library(${PROJECT_NAME})
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
 
+option(ASAN "Build this target with AddressSanitizer" ON)
 
-#[[==UTIL==]]
- target_sources(
-     ${PROJECT_NAME} PUBLIC
-     FILE_SET ${PROJECT_NAME}_UTILS
-     TYPE CXX_MODULES
-     BASE_DIRS "${CMAKE_CURRENT_LIST_DIR}/src/util"
-     FILES
-        src/util/tracing_exception.cppm
-        src/util/byte_utils.cppm
-        src/util/util.cppm
-  )
+if(ASAN)
+ if(MSVC)
+  target_compile_options(${PROJECT_NAME} PUBLIC /fsanitize=address)
+ else()
+  target_compile_options(${PROJECT_NAME} PUBLIC -fsanitize=address)
+  target_link_options(${PROJECT_NAME} PUBLIC -fsanitize=address)
+ endif()
+endif()
 
-#[[==UUID==]]
-
-target_sources(
-    ${PROJECT_NAME} PUBLIC
-    FILE_SET ${PROJECT_NAME}_UUID
-    TYPE CXX_MODULES
-    BASE_DIRS "${CMAKE_CURRENT_LIST_DIR}/src/uuid"
-    FILES
-        src/uuid/generators.cppm
-        src/uuid/impl.cppm     
-        src/uuid/std.cppm
-        src/uuid/uuid.cppm
- )
 
 #[[==CRYPTO==]]
-
 target_sources(
     ${PROJECT_NAME} PUBLIC
-    FILE_SET ${PROJECT_NAME}_CRYPTO
+    FILE_SET ${PROJECT_NAME}_crypto
     TYPE CXX_MODULES
     BASE_DIRS "${CMAKE_CURRENT_LIST_DIR}/src/crypto"
     FILES
@@ -55,17 +39,42 @@ target_sources(
         src/crypto/std.cppm
 )
 
+#[[==UTIL==]]
+ target_sources(
+     ${PROJECT_NAME} PUBLIC
+     FILE_SET ${PROJECT_NAME}_util
+     TYPE CXX_MODULES
+     BASE_DIRS "${CMAKE_CURRENT_LIST_DIR}/src/util"
+     FILES
+        src/util/byte_utils.cppm
+        src/util/util.cppm
+  )
+
+#[[==UUID==]]
+
+target_sources(
+    ${PROJECT_NAME} PUBLIC
+    FILE_SET ${PROJECT_NAME}_uuid
+    TYPE CXX_MODULES
+    BASE_DIRS "${CMAKE_CURRENT_LIST_DIR}/src/uuid"
+    FILES
+        src/uuid/generators.cppm
+        src/uuid/impl.cppm     
+        src/uuid/std.cppm
+        src/uuid/uuid.cppm
+ )
+
 target_include_directories(${PROJECT_NAME} PUBLIC src/)
 
 #[[==INSTALL EXPORT TARGETS==]]
 install(
     TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}-targets
-    FILE_SET ${PROJECT_NAME}_UTILS
+    FILE_SET ${PROJECT_NAME}_crypto
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}"
-    FILE_SET ${PROJECT_NAME}_UUID
+    FILE_SET ${PROJECT_NAME}_util
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}"
-    FILE_SET ${PROJECT_NAME}_CRYPTO
+    FILE_SET ${PROJECT_NAME}_uuid
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}"
 )
 
