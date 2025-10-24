@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 4.1 FATAL_ERROR)
 set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "d0edc3af-4c50-42ea-a356-e2862fe7a444")
-project (toria
-    VERSION 0.1
-    LANGUAGES CXX)
+set(CMAKE_EXPERIMENTAL_EXPORT_PACKAGE_INFO "b80be207-778e-46ba-8080-b23bba22639e")
 project(toria
         VERSION 0.1
         LANGUAGES CXX)
@@ -67,8 +65,10 @@ target_sources(
         src/uuid/uuid.cppm
 )
 
-option(BUILD_TESTS "Build this target with AddressSanitizer")
-
+option(BUILD_TESTS "Build Tests" OFF)
+if(BUILD_TEST)
+    add_subdirectory(tests)
+endif ()
 #[[==INSTALL EXPORT TARGETS==]]
 install(
     TARGETS ${PROJECT_NAME}
@@ -96,5 +96,3 @@ install(EXPORT ${PROJECT_NAME}-targets
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}/")
 
 export(EXPORT ${PROJECT_NAME}-targets FILE "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-targets.cmake" NAMESPACE toria::)
-
-add_subdirectory(tests)
