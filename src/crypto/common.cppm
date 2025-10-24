@@ -1,13 +1,6 @@
 export module toria.crypto:common;
-#ifdef __INTELLISENSE__
-#include <concepts>
-#include <cstddef>
-#include <cstdint>
-#include <span>
-#include <utility>
-#else
+
 import std;
-#endif
 
 namespace toria::crypto
 {
@@ -37,5 +30,7 @@ namespace toria::crypto
 	export constexpr std::uint32_t maj(std::uint32_t x, std::uint32_t y, std::uint32_t z) {
 		return (x & y) | (x & z) | (y & z);
 	}
+
 	export constexpr std::byte zero_byte{0};
+	export constexpr std::byte max_byte{255};
 }  // namespace toria::crypto

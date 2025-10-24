@@ -1,17 +1,8 @@
 export module toria.crypto:sha1;
 
-#ifdef __INTELLISENSE__
-#include "common.cppm"
-#include <array>
-#include <bit>
-#include <cstddef>
-#include <cstdint>
-#include <span>
-#else
 import std;
 import toria.util;
 import :common;
-#endif  // __INTELLISENSE__
 namespace toria::crypto
 {
 	export class sha1
@@ -20,7 +11,9 @@ namespace toria::crypto
 		static constexpr std::size_t hash_size = 5 * sizeof(std::uint32_t);
 		static constexpr std::size_t hash_size_bits = hash_size * 8;
 		static constexpr std::size_t message_block_size = 64;
+
 		constexpr sha1() noexcept { this->reset(); }
+
 		constexpr void reset() noexcept {
 			m_digest[0] = 0x67452301;
 			m_digest[1] = 0xEFCDAB89;
@@ -33,8 +26,11 @@ namespace toria::crypto
 			m_finalized = false;
 		}
 
-		constexpr hash_err update(std::byte byte) noexcept { return this->update(byte, false); }
+		constexpr hash_err update(const std::byte byte) noexcept {
+			return this->update(byte, false);
+		}
 
+		// NOLINTNEXTLINE(readability-make-member-function-const)
 		constexpr hash_err update(const std::span<const std::byte> bytes) noexcept {
 			if (m_finalized)
 				return hash_err::ALREADY_FINALIZED;
@@ -77,7 +73,8 @@ namespace toria::crypto
 		}
 
 		template<std::size_t Size>
-		[[nodiscard]] constexpr hash_err get_digest(std::span<std::byte, Size> bytesOut) const noexcept {
+		[[nodiscard]] constexpr hash_err
+		get_digest(std::span<std::byte, Size> bytesOut) const noexcept {
 			if (!m_finalized)
 				return hash_err::NOT_FINALIZED;
 			std::span digest{m_digest};
@@ -86,10 +83,10 @@ namespace toria::crypto
 		}
 
 	private:
-		std::array<std::uint32_t, hash_size / sizeof(std::uint32_t)> m_digest;
-		std::uint16_t m_messageBlockIndex;
+		std::array<std::uint32_t, hash_size / sizeof(std::uint32_t)> m_digest{};
+		std::uint16_t m_messageBlockIndex = 0;
 		bool m_finalized = false;
-		std::size_t m_messageLength;
+		std::size_t m_messageLength{};
 		std::array<std::uint8_t, message_block_size> m_messageBlock{};
 
 	private:
@@ -105,6 +102,7 @@ namespace toria::crypto
 			return hash_err::SUCCESS;
 		}
 
+		// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 		constexpr void update_block() noexcept {
 			std::array<std::uint32_t, 80> w{};
 			std::size_t idx;

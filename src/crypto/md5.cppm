@@ -1,19 +1,7 @@
 export module toria.crypto:md5;
-#ifdef __INTELLISENSE__
-#include "crypto/common.cppm"
-#include "util/byte_utils.cppm"
-#include <array>
-#include <bit>
-#include <concepts>
-#include <cstddef>
-#include <cstdint>
-#include <cstring>
-#include <span>
-#else
 import std;
 import toria.util;
 import :common;
-#endif  // __INTELLISENSE__
 
 namespace toria::crypto
 {
@@ -23,7 +11,9 @@ namespace toria::crypto
 		static constexpr std::size_t hash_size = 4 * sizeof(std::uint32_t);
 		static constexpr std::size_t hash_size_bits = hash_size * 8;
 		static constexpr std::size_t message_block_size = 64;
+
 		constexpr md5() noexcept { this->reset(); }
+
 		constexpr void reset() noexcept {
 			m_digest[0] = 0x67452301;
 			m_digest[1] = 0xEFCDAB89;
@@ -34,6 +24,7 @@ namespace toria::crypto
 			m_finalized = false;
 		}
 
+		// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 		constexpr hash_err update(std::byte byte) {
 			std::array temp{byte};
 			return update(temp);
@@ -65,7 +56,8 @@ namespace toria::crypto
 		}
 
 		template<std::size_t Size>
-		[[nodiscard]] constexpr hash_err get_digest(std::span<std::byte, Size> bytesOut) const noexcept {
+		[[nodiscard]] constexpr hash_err
+		get_digest(std::span<std::byte, Size> bytesOut) const noexcept {
 			if (!m_finalized)
 				return hash_err::NOT_FINALIZED;
 			std::span digest{m_digest};
@@ -74,8 +66,8 @@ namespace toria::crypto
 		}
 
 	private:
-		std::array<std::uint32_t, hash_size / sizeof(std::uint32_t)> m_digest;
-		std::array<std::uint32_t, 2> m_bits;
+		std::array<std::uint32_t, hash_size / sizeof(std::uint32_t)> m_digest{};
+		std::array<std::uint32_t, 2> m_bits{};
 		bool m_finalized = false;
 		std::array<std::uint8_t, message_block_size> m_block{};
 
@@ -152,6 +144,7 @@ namespace toria::crypto
 			return hash_err::SUCCESS;
 		}
 
+		// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 		constexpr void transform() noexcept {
 			std::array<std::uint32_t, 16> buffer{};
 			auto [A, B, C, D] = m_digest;
@@ -235,7 +228,8 @@ namespace toria::crypto
 			m_digest[3] += D;
 		}
 
-		static constexpr void encode(std::span<std::uint8_t> output, std::span<std::uint32_t> input) {
+		static constexpr void
+		encode(std::span<std::uint8_t> output, std::span<std::uint32_t> input) {
 			if consteval {
 				for (std::size_t i = 0, j = 0; j < input.size(); i++, j += 4) {
 					output[j] = static_cast<std::uint8_t>(input[i]) & 0xff;

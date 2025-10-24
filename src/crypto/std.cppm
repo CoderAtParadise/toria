@@ -1,20 +1,13 @@
 export module toria.crypto:std;
-#ifdef __INTELLISENSE__
-#include "crypto/hash.cppm"
-#include <array>
-#include <cstddef>
-#include <cstdint>
-#include <format>
-#include <span>
-#else
+
 import std;
 import :common;
 import :hash;
-#endif  // __INTELLISENSE__
 
 template<toria::crypto::is_hashing_algorithm hashing_algorithm>
 struct std::formatter<toria::crypto::hash<hashing_algorithm>>
 {
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 	constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
 
 	auto
@@ -24,8 +17,8 @@ struct std::formatter<toria::crypto::hash<hashing_algorithm>>
 		if (error != toria::crypto::hash_err::SUCCESS)
 			throw std::format_error("Hashing Error: Bytes have not been finalized");
 		auto context = ctx.out();
-		for (std::byte byte : bytes) {
-			context = format_to(ctx.out(), "{:02x}", std::to_integer<std::uint8_t>(byte));
+		for (const std::byte& byte : bytes) {
+			context = std::format_to(ctx.out(), "{:02x}", std::to_integer<std::uint8_t>(byte));
 		}
 		return context;
 	}

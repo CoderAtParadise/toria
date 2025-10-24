@@ -1,18 +1,8 @@
 export module toria.crypto:hash;
-#ifdef __INTELLISENSE__
-#include "crypto/common.cppm"
-#include <array>
-#include <cstddef>
-#include <filesystem>
-#include <fstream>
-#include <istream>
-#include <span>
-#include <string_view>
-#else
+
 import std;
 import toria.util;
 import :common;
-#endif  // __INTELLISENSE__
 
 namespace toria::crypto
 {

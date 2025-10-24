@@ -1,23 +1,15 @@
 export module toria.uuid:impl;
-#ifdef __INTELLISENSE__
-#include "crypto/common.cppm"
-#include <array>
-#include <charconv>
-#include <format>
-#include <ranges>
-#include <span>
-#else
+
 import std;
 import toria.crypto;
-#endif
 
 namespace toria::uuid
 {
 	export class uuid
 	{
 	private:
-		constexpr uuid(std::uint8_t inital) noexcept {
-			m_bytes.fill(static_cast<std::byte>(inital));
+		explicit constexpr uuid(std::byte initial) noexcept {
+			m_bytes.fill(initial);
 		}
 
 	public:
@@ -45,11 +37,13 @@ namespace toria::uuid
 	public:
 		constexpr uuid() noexcept = default;
 
-		constexpr uuid(std::byte (&arr)[16]) noexcept {
-			std::ranges::copy(std::as_const(arr), m_bytes.begin());
+		// NOLINTNEXTLINE(google-explicit-constructor)
+		constexpr uuid(std::span<std::byte, 16> bytes) noexcept {
+			std::ranges::copy(bytes, m_bytes.begin());
 		}
 
-		constexpr uuid(std::span<std::byte,16> bytes) noexcept {
+		// NOLINTNEXTLINE(google-explicit-constructor)
+		constexpr uuid(std::span<const std::byte, 16> bytes) noexcept {
 			std::ranges::copy(bytes, m_bytes.begin());
 		}
 
@@ -58,38 +52,37 @@ namespace toria::uuid
 				std::copy(first, last, m_bytes.begin());
 		}
 
-		constexpr uuid(std::ranges::range auto range) {
-			std::ranges::copy(range, m_bytes.begin());
-		}
+		// NOLINTNEXTLINE(google-explicit-constructor)
+		constexpr uuid(std::ranges::range auto range) { std::ranges::copy(range, m_bytes.begin()); }
 
+		// NOLINTNEXTLINE(google-explicit-constructor)
 		constexpr uuid(std::string_view str) noexcept {
-			if (str[0] == '{')
-				str = str.substr(1);
 			if (str.size() != 36) {
 				if (str.size() == 38)
 					str = str.substr(1, 36);
-				return;
+				else
+					return;
 			}
-			auto parse_hex = [](std::string_view str, std::uint8_t& hexOut) constexpr {
-				auto [_, ec] = std::from_chars(str.data(), str.data() + str.size(), hexOut, 16);
+			auto parse_hex = [](const std::string_view substr, std::uint8_t& hexOut) constexpr {
+				auto [_, ec] =
+					std::from_chars(substr.data(), substr.data() + substr.size(), hexOut, 16);
 				return ec == std::errc{};
 			};
 			bool parseSuccess = true;
-			std::size_t;
 			for (std::size_t idx{0}, hyphenCount{0}; idx < 16; idx++) {
 				if (idx == 4 || idx == 6 || idx == 8 || idx == 10)
 					hyphenCount++;
 				std::uint8_t hexOut = 0;
-				parseSuccess =
-					parseSuccess && parse_hex(str.substr(idx * 2 + hyphenCount, 2), hexOut);
+				parseSuccess &= parse_hex(str.substr(idx * 2 + hyphenCount, 2), hexOut);
 				m_bytes[idx] = static_cast<std::byte>(hexOut);
 			}
 			if (!parseSuccess)
-				m_bytes.fill(toria::crypto::zero_byte);
+				m_bytes.fill(crypto::zero_byte);
 		}
 
+		// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 		[[nodiscard]] constexpr version_type version() const noexcept {
-			switch (std::to_integer<std::size_t>(m_bytes[6] >> 4)) {
+			switch (std::to_integer<std::size_t>(m_bytes[16] >> 4)) {
 				case 1:
 					return version_type::v1;
 				case 2:
@@ -111,6 +104,7 @@ namespace toria::uuid
 			}
 		}
 
+		// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 		[[nodiscard]] constexpr variant_type variant() const noexcept {
 			const std::byte var = m_bytes[8] >> 4;
 			if (var <= static_cast<std::byte>(variant_type::ncs))
@@ -123,12 +117,12 @@ namespace toria::uuid
 		}
 
 		[[nodiscard]] constexpr bool is_nil() const noexcept {
-			constexpr static uuid nil_uuid{0x00};
+			constexpr static uuid nil_uuid{crypto::zero_byte};
 			return this->operator==(nil_uuid);
 		}
 
 		[[nodiscard]] constexpr bool is_max() const noexcept {
-			constexpr static uuid max_uuid{0xff};
+			constexpr static uuid max_uuid{crypto::max_byte};
 			return this->operator==(max_uuid);
 		}
 

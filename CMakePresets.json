@@ -15,7 +15,7 @@
     {
       "name": "base",
       "hidden": true,
-      "generator": "Ninja",
+      "generator": "Ninja Multi-Config",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
       "architecture": {
@@ -29,7 +29,8 @@
         "Windows Configurations:",
         "MSVC",
         "MSVC | ASAN",
-        "Clang"
+        "Clang",
+        "Clang | ASAN"
       ],
       "name": "windows_base",
       "hidden": true,
@@ -60,7 +61,7 @@
       "inherits": "windows_msvc",
       "displayName": "MSVC | ASAN",
       "cacheVariables": {
-        "ASAN": true
+        "ASAN": "ON"
       }
     },
     {
@@ -76,6 +77,15 @@
           "intelliSenseMode": "windows-clang-x64",
           "enableClangTidyCodeAnalysis": true
         }
+      }
+    },
+    {
+      "name": "windows_clang_asan",
+      "hidden": true,
+      "inherits": "windows_clang",
+      "displayName": "CLANG | ASAN",
+      "cacheVariables": {
+        "ASAN": "ON"
       }
     },
     {
@@ -120,7 +130,7 @@
       "inherits": "linux_gcc",
       "displayName": "GCC | ASAN",
       "cacheVariables": {
-        "ASAN": true
+        "ASAN": "ON"
       }
     },
     {
@@ -142,7 +152,7 @@
       "inherits": "linux_clang",
       "displayName": "Clang | ASAN",
       "cacheVariables": {
-        "ASAN": true
+        "ASAN": "ON"
       }
     },
     {
@@ -203,6 +213,42 @@
       "name": "windows_release_msvc_asan",
       "displayName": "Release ASAN",
       "configurePreset": "windows_msvc_asan",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows_debug_clang",
+      "displayName": "Debug",
+      "configurePreset": "windows_clang",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows_qa_clang",
+      "displayName": "Quality Assurance",
+      "configurePreset": "windows_clang",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "windows_release_clang",
+      "displayName": "Release",
+      "configurePreset": "windows_clang",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows_debug_clang_asan",
+      "displayName": "Debug",
+      "configurePreset": "windows_clang_asan",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows_qa_clang_asan",
+      "displayName": "Quality Assurance",
+      "configurePreset": "windows_clang_asan",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "windows_release_clang_asan",
+      "displayName": "Release",
+      "configurePreset": "windows_clang_asan",
       "configuration": "Release"
     },
     {

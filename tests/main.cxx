@@ -1,19 +1,7 @@
-
-#ifdef __INTELLISENSE__
-#include <cstddef>
-#include <print>
-#else
 import toria.uuid;
 import toria.crypto;
 import toria.util;
 import std;
-#endif  // __INTELLISENSE__
-using namespace std::literals;
-constexpr toria::crypto::hash<toria::crypto::sha1> test() {
-	toria::crypto::hash<toria::crypto::sha1> hash{};
-	hash.hashString("teststring"sv);
-	return hash;
-}
 
 int main() {
 	constexpr auto gen3 = toria::uuid::v3(toria::uuid::namespace_dns);
@@ -23,10 +11,14 @@ int main() {
 	constexpr auto cuuid3 = gen3("www.example.com");
 	auto uuid5 = gen5("www.example.com");
 	constexpr auto cuuid5 = gen5("www.example.com");
+	auto gen7 = toria::uuid::v7();
 	std::println("UUID V3 {}", uuid3);
 	std::println("constexpr UUID V3 {}", cuuid3);
 	std::println("UUID V5 {}", uuid5);
 	std::println("constexpr UUID V5 {}", cuuid5);
 	std::println("UUID V4 {}", gen4());
+	std::println("UUID V7 {}", gen7());
+	std::println("UUID v7 2 {}", gen7());
 	return 0;
+	// 3e a6 8d 6e  2a 08 0b 85
 }

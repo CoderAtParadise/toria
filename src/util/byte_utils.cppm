@@ -1,17 +1,6 @@
 export module toria.util:byte_utils;
-#ifdef __INTELLISENSE__
-#include <array>
-#include <bit>
-#include <concepts>
-#include <cstddef>
-#include <cstring>
-#include <span>
-#include <string_view>
-#include <type_traits>
-#include <vector>
-#else
+
 import std;
-#endif
 
 namespace toria::util
 {
@@ -30,6 +19,7 @@ namespace toria::util
 		using byte_type = std::conditional_t<std::is_const_v<T>, const std::byte, std::byte>;
 
 		template<is_byte_type ByteType, std::size_t Size>
+		// NOLINTNEXTLINE(google-explicit-constructor)
 		constexpr byte_wrapper(std::span<ByteType, Size> bytes) noexcept
 			requires(Size >= size_byte)
 		{
@@ -37,7 +27,7 @@ namespace toria::util
 				m_bytes[idx] = bytes[idx];
 			}
 		}
-
+		// NOLINTNEXTLINE(google-explicit-constructor)
 		constexpr byte_wrapper(const T& value) noexcept
 			: m_bytes(std::bit_cast<std::array<std::byte, size_byte>>(value)) {}
 
