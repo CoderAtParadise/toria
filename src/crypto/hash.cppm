@@ -25,7 +25,7 @@ namespace toria::crypto
 			this->finalize();
 		}
 
-		constexpr void hashString(std::string_view str) { this->hashString<char>(str); }
+		constexpr void hashString(const std::string_view str) { this->hashString<char>(str); }
 
 		template<class CharType, class Traits>
 		void hashStream(const std::basic_ifstream<CharType, Traits>& stream) {

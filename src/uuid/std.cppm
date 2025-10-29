@@ -10,7 +10,12 @@ struct std::formatter<toria::uuid::uuid>
 	constexpr auto parse(std::format_parse_context& ctx) {
 		// TODO: Support printing in binary and decimal
 		// Potential support python/microsoft
-		return ctx.begin();
+
+		auto pos = ctx.begin();
+		while (pos != ctx.end() && *pos != '}') {
+			++pos;
+		}
+		return pos;
 	}
 
 	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)

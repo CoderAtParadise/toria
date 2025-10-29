@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 4.1 FATAL_ERROR)
 set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "d0edc3af-4c50-42ea-a356-e2862fe7a444")
-set(CMAKE_EXPERIMENTAL_EXPORT_PACKAGE_INFO "b80be207-778e-46ba-8080-b23bba22639e")
 project(toria
-        VERSION 0.1
+        VERSION 0.1.0
         LANGUAGES CXX)
 
 include(CMakePackageConfigHelpers)
@@ -10,10 +9,10 @@ include(GNUInstallDirs)
 
 set(CMAKE_CXX_MODULE_STD 1)
 
-add_library(${PROJECT_NAME})
+add_library(${PROJECT_NAME} STATIC)
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 
-option(ASAN "Build this target with AddressSanitizer")
+option(ASAN "Build this target with AddressSanitizer" OFF)
 
 if (ASAN)
     if (MSVC)
@@ -47,7 +46,10 @@ target_sources(
         TYPE CXX_MODULES
         BASE_DIRS "${CMAKE_CURRENT_LIST_DIR}/src/util"
         FILES
+        src/util/basic_fixed_string.cppm
         src/util/byte_utils.cppm
+        src/util/std.cppm
+        src/util/string_utils.cppm
         src/util/util.cppm
 )
 
@@ -66,7 +68,7 @@ target_sources(
 )
 
 option(BUILD_TESTS "Build Tests" OFF)
-if(BUILD_TEST)
+if (BUILD_TESTS)
     add_subdirectory(tests)
 endif ()
 #[[==INSTALL EXPORT TARGETS==]]
@@ -83,16 +85,30 @@ install(
         EXPORT ${PROJECT_NAME}-targets
         FILE_SET ${PROJECT_NAME}_crypto
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}"
+        TARGETS ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}-targets
+        FILE_SET ${PROJECT_NAME}_crypto
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}/crypto"
         FILE_SET ${PROJECT_NAME}_util
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}/util"
         FILE_SET ${PROJECT_NAME}_uuid
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}/uuid"
 )
 
 install(EXPORT ${PROJECT_NAME}-targets
-        FILE ${PROJECT_NAME}-targets.cmake
+        FILE "${PROJECT_NAME}-config.cmake"
         NAMESPACE ${PROJECT_NAME}::
         CXX_MODULES_DIRECTORY
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}/")
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+)
 
-export(EXPORT ${PROJECT_NAME}-targets FILE "${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECT_NAME}-targets.cmake" NAMESPACE toria::)
+write_basic_package_version_file(
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+        VERSION ${PROJECT_NAME}
+        COMPATIBILITY SameMajorVersion
+)
+
+install(FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+

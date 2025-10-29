@@ -26,8 +26,8 @@ namespace toria::uuid::generators
 	static constexpr std::byte mask_lower_6{0x0f};
 
 	constexpr void set_version_and_variant(
-		std::span<std::byte, 16> bytes, uuid::version_type version,
-		uuid::variant_type variant = uuid::variant_type::rfc_4122) {
+		std::span<std::byte, 16> bytes, const uuid::version_type version,
+		const uuid::variant_type variant = uuid::variant_type::rfc_4122) {
 		bytes[6] =
 			(bytes[6] & mask_lower) | static_cast<std::byte>(std::to_underlying(version) << 4);
 		bytes[8] =
@@ -103,7 +103,7 @@ namespace toria::uuid::generators
 			crypto::hash<hashing_algorithm> hash{};
 			hash.update(m_namespace_uuid.bytes());
 
-			for (std::uint32_t substring : str) {
+			for (const std::uint32_t& substring : str) {
 				hash.update(static_cast<std::byte>(substring & 0xFF));
 				if constexpr (!std::same_as<CharType, char>) {
 					hash.update(static_cast<std::byte>((substring >> 8) & 0xFF));
@@ -120,7 +120,7 @@ namespace toria::uuid::generators
 			return uuid{bytes};
 		}
 
-		[[nodiscard]] constexpr uuid operator()(std::string_view str) const {
+		[[nodiscard]] constexpr uuid operator()(const std::string_view str) const {
 			return operator()<char>(str);
 		}
 
@@ -149,7 +149,7 @@ namespace toria::uuid::generators
 			const std::uint64_t milli = micro / 1000;
 			const std::uint16_t precision = static_cast<std::uint16_t>(
 				((micro % ns_in_milli) * (1 << sub_ms_bits)) / ns_in_milli);
-			// Yes this is dumb with the number of byteswaps.
+			// Yes this is dumb with the number of byteswap's.
 			// Is there any performance difference doing it this way? No...
 			// But hey it's works
 			raw_bytes[0] =

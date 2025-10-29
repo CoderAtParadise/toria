@@ -8,7 +8,7 @@ namespace toria::uuid
 	export class uuid
 	{
 	private:
-		explicit constexpr uuid(std::byte initial) noexcept {
+		explicit constexpr uuid(const std::byte initial) noexcept {
 			m_bytes.fill(initial);
 		}
 
@@ -69,7 +69,7 @@ namespace toria::uuid
 				return ec == std::errc{};
 			};
 			bool parseSuccess = true;
-			for (std::size_t idx{0}, hyphenCount{0}; idx < 16; idx++) {
+			for (std::size_t idx{0}, hyphenCount{0}; idx < 16; ++idx) {
 				if (idx == 4 || idx == 6 || idx == 8 || idx == 10)
 					hyphenCount++;
 				std::uint8_t hexOut = 0;

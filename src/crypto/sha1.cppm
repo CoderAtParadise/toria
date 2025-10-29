@@ -66,7 +66,7 @@ namespace toria::crypto
 			update(static_cast<std::byte>((bitCount >> 16) & 0xFF), true);
 			update(static_cast<std::byte>((bitCount >> 8) & 0xFF), true);
 			update(static_cast<std::byte>(bitCount & 0xFF), true);
-			for (std::size_t idx = 0; idx < hash_size / sizeof(std::uint32_t); idx++) {
+			for (std::size_t idx = 0; idx < hash_size / sizeof(std::uint32_t); ++idx) {
 				m_digest[idx] = std::byteswap(m_digest[idx]);
 			}
 			return hash_err::SUCCESS;
@@ -90,7 +90,7 @@ namespace toria::crypto
 		std::array<std::uint8_t, message_block_size> m_messageBlock{};
 
 	private:
-		constexpr hash_err update(std::byte byte, bool finalizing) {
+		constexpr hash_err update(const std::byte byte,const bool finalizing) {
 			if (m_finalized && !finalizing)
 				return hash_err::ALREADY_FINALIZED;
 			m_messageBlock[m_messageBlockIndex++] = std::to_integer<std::uint8_t>(byte);
@@ -106,14 +106,14 @@ namespace toria::crypto
 		constexpr void update_block() noexcept {
 			std::array<std::uint32_t, 80> w{};
 			std::size_t idx;
-			for (idx = 0; idx < 16; idx++) {
+			for (idx = 0; idx < 16; ++idx) {
 				w[idx] = static_cast<std::uint32_t>(m_messageBlock[idx * 4 + 0] << 24);
 				w[idx] |= static_cast<std::uint32_t>(m_messageBlock[idx * 4 + 1] << 16);
 				w[idx] |= static_cast<std::uint32_t>(m_messageBlock[idx * 4 + 2] << 8);
 				w[idx] |= static_cast<std::uint32_t>(m_messageBlock[idx * 4 + 3]);
 			}
 
-			for (idx = 16; idx < 80; idx++) {
+			for (idx = 16; idx < 80; ++idx) {
 				w[idx] = std::rotl((w[idx - 3] ^ w[idx - 8] ^ w[idx - 14] ^ w[idx - 16]), 1);
 			}
 			auto [A, B, C, D, E] = m_digest;

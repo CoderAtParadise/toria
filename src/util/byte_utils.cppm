@@ -23,7 +23,7 @@ namespace toria::util
 		constexpr byte_wrapper(std::span<ByteType, Size> bytes) noexcept
 			requires(Size >= size_byte)
 		{
-			for (std::size_t idx = 0; idx < size_byte; idx++) {
+			for (std::size_t idx = 0; idx < size_byte; ++idx) {
 				m_bytes[idx] = bytes[idx];
 			}
 		}
@@ -33,8 +33,10 @@ namespace toria::util
 
 		constexpr byte_type& operator[](std::size_t idx) noexcept { return m_bytes[idx]; }
 
+		// NOLINTNEXTLINE(google-explicit-constructor)
 		constexpr operator T() noexcept { return std::bit_cast<T>(m_bytes); }
 
+		// NOLINTNEXTLINE(google-explicit-constructor)
 		[[nodiscard]] constexpr T value() const noexcept { return std::bit_cast<T>(m_bytes); }
 
 		constexpr operator std::span<byte_type, size_byte>() noexcept { return m_bytes; }
@@ -54,30 +56,33 @@ namespace toria::util
 		static constexpr std::size_t size_byte = sizeof(T);
 		using byte_type = std::conditional_t<std::is_const_v<T>, const std::byte, std::byte>;
 
+		// NOLINTNEXTLINE(google-explicit-constructor)
 		constexpr byte_wrapper(std::span<T, Size> val) noexcept : m_original(val) {
 			m_bytes.resize(val.size_bytes());
 			std::span<std::byte> bytes{m_bytes};
-			for (std::size_t idx = 0; idx < val.size(); idx++) {
+			for (std::size_t idx = 0; idx < val.size(); ++idx) {
 				byte_wrapper<T> subval{m_original[idx]};
-				for (std::size_t offset = 0; offset < size_byte; offset++) {
+				for (std::size_t offset = 0; offset < size_byte; ++offset) {
 					bytes[idx * size_byte + offset] = subval[offset];
 				}
 			}
 		}
 
-		constexpr byte_type& operator[](std::size_t idx) noexcept { return m_bytes[idx]; }
+		constexpr byte_type& operator[](const std::size_t idx) noexcept { return m_bytes[idx]; }
 
+		// NOLINTNEXTLINE(google-explicit-constructor)
 		constexpr operator std::span<T, Size>() noexcept
 			requires(!std::is_const_v<T>)
 		{
 			std::span<byte_type, Size> bytes{m_bytes};
-			for (std::size_t idx = 0; idx < m_original.size(); idx++) {
+			for (std::size_t idx = 0; idx < m_original.size(); ++idx) {
 				m_original[idx] =
 					byte_wrapper<T>(bytes.subspan(idx * size_byte, size_byte)).value();
 			}
 			return m_original;
 		}
 
+		// NOLINTNEXTLINE(google-explicit-constructor)
 		constexpr operator std::span<byte_type>() noexcept { return m_bytes; }
 
 		constexpr std::span<byte_type> bytes() const noexcept { return m_bytes; }
@@ -94,6 +99,7 @@ namespace toria::util
 	{
 	public:
 		using byte_type = Byte;
+		// NOLINTNEXTLINE(google-explicit-constructor)
 		constexpr byte_wrapper(std::span<byte_type, Size> bytes) noexcept : m_bytes(bytes) {}
 		constexpr operator std::span<byte_type, Size>() noexcept { return m_bytes; }
 		constexpr std::size_t size() const noexcept { return m_bytes.size(); }
@@ -133,7 +139,7 @@ namespace toria::util
 		if consteval {
 			byte_wrapper<std::span<Dest, DestSize>> destBytes{dest};
 			byte_wrapper<std::span<const Src, SrcSize>> srcBytes{src};
-			for (std::size_t idx = 0; idx < count; idx++) {
+			for (std::size_t idx = 0; idx < count; ++idx) {
 				destBytes[idx] = srcBytes[idx];
 			}
 			dest = destBytes;
@@ -148,7 +154,7 @@ namespace toria::util
 		count = std::min(dest.size_bytes(), count);
 		if consteval {
 			byte_wrapper<std::span<Dest, Size>> destBytes{dest};
-			for (std::size_t idx = 0; idx < count; idx++) {
+			for (std::size_t idx = 0; idx < count; ++idx) {
 				destBytes[idx] = static_cast<std::byte>(val);
 			}
 		}

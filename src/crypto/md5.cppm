@@ -12,7 +12,7 @@ namespace toria::crypto
 		static constexpr std::size_t hash_size_bits = hash_size * 8;
 		static constexpr std::size_t message_block_size = 64;
 
-		constexpr md5() noexcept { this->reset(); }
+		constexpr md5() noexcept { reset(); }
 
 		constexpr void reset() noexcept {
 			m_digest[0] = 0x67452301;
@@ -25,7 +25,7 @@ namespace toria::crypto
 		}
 
 		// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-		constexpr hash_err update(std::byte byte) {
+		constexpr hash_err update(const std::byte byte) {
 			std::array temp{byte};
 			return update(temp);
 		}
@@ -39,7 +39,7 @@ namespace toria::crypto
 				return hash_err::ALREADY_FINALIZED;
 			m_finalized = true;
 			std::size_t used = (m_bits[0] >> 3) & 0x3F;
-			std::size_t count = 64u - 1u - used;
+			const std::size_t count = 64u - 1u - used;
 			std::span block{m_block};
 			block[used++] = 0x80;
 			if (count < 8) {
@@ -49,7 +49,7 @@ namespace toria::crypto
 			}
 			else
 				util::memset(block.subspan(used), 0, count - 8);
-			std::span<const std::uint32_t, 2> countBytes{m_bits};
+			const std::span<const std::uint32_t, 2> countBytes{m_bits};
 			util::memcpy(block.subspan(56), countBytes);
 			transform();
 			return hash_err::SUCCESS;
@@ -89,15 +89,15 @@ namespace toria::crypto
 		/*
 		 * Basic MD5 functions which have been optimized based on Colin Plub's implementation
 		 */
-		static constexpr auto F(std::uint32_t x, std::uint32_t y, std::uint32_t z) {
+		static constexpr auto F(const std::uint32_t x, const std::uint32_t y, const std::uint32_t z) {
 			return z ^ (x & (y ^ z));
 		}
 
-		static constexpr auto G(std::uint32_t x, std::uint32_t y, std::uint32_t z) {
+		static constexpr auto G(const std::uint32_t x, const std::uint32_t y,const std::uint32_t z) {
 			return y ^ (z & (x ^ y));
 		}
 
-		static constexpr auto I(std::uint32_t x, std::uint32_t y, std::uint32_t z) {
+		static constexpr auto I(const std::uint32_t x, const std::uint32_t y, const std::uint32_t z) {
 			return y ^ (x | ~z);
 		}
 
@@ -110,7 +110,7 @@ namespace toria::crypto
 			w += x;
 		}
 
-		constexpr hash_err update(const std::span<const std::byte> bytes, bool finalizing) {
+		constexpr hash_err update(const std::span<const std::byte> bytes,const bool finalizing) {
 			if (m_finalized && !finalizing)
 				return hash_err::ALREADY_FINALIZED;
 			std::size_t used = m_bits[0];
@@ -119,11 +119,11 @@ namespace toria::crypto
 				m_bits[1]++;
 			m_bits[1] += bytesLen >> 29;
 			used = (used >> 3) & 0x3F;
-			std::size_t available = 64 - used;
+			const std::size_t available = 64 - used;
 			std::size_t bytesOffset = 0;
-			std::span<std::uint8_t> block = std::span(m_block);
+			const std::span<std::uint8_t> block = std::span(m_block);
 			if (used) {
-				auto offsetBlock = block.subspan(used);
+				const auto offsetBlock = block.subspan(used);
 				if (bytesLen < available) {
 					util::memcpy(offsetBlock, bytes);
 					return hash_err::SUCCESS;
@@ -229,9 +229,9 @@ namespace toria::crypto
 		}
 
 		static constexpr void
-		encode(std::span<std::uint8_t> output, std::span<std::uint32_t> input) {
+		encode(std::span<std::uint8_t> output, const std::span<std::uint32_t> input) {
 			if consteval {
-				for (std::size_t i = 0, j = 0; j < input.size(); i++, j += 4) {
+				for (std::size_t i = 0, j = 0; j < input.size(); ++i, j += 4) {
 					output[j] = static_cast<std::uint8_t>(input[i]) & 0xff;
 					output[j + 1] = static_cast<std::uint8_t>(input[i] >> 8) & 0xff;
 					output[j + 2] = static_cast<std::uint8_t>(input[i] >> 16) & 0xff;
@@ -245,9 +245,9 @@ namespace toria::crypto
 
 		static constexpr void decode(
 			std::span<std::uint32_t, 16> output,
-			std::span<std::uint8_t, message_block_size> input) {
+			const std::span<std::uint8_t, message_block_size> input) {
 			if consteval {
-				for (std::size_t i = 0, j = 0; j < input.size(); i++, j += 4) {
+				for (std::size_t i = 0, j = 0; j < input.size(); ++i, j += 4) {
 					output[i] = static_cast<std::uint32_t>(input[j]) |
 								static_cast<std::uint32_t>(input[j + 1]) << 8 |
 								static_cast<std::uint32_t>(input[j + 2]) << 16 |

@@ -19,15 +19,15 @@ namespace toria::crypto
 		{ algo.get_digest(std::declval<std::span<std::byte>>()) } -> std::same_as<hash_err>;
 	};
 
-	export constexpr std::uint32_t parity(std::uint32_t x, std::uint32_t y, std::uint32_t z) {
+	constexpr std::uint32_t parity(const std::uint32_t x, const std::uint32_t y, const std::uint32_t z) {
 		return x ^ y ^ z;
 	}
 
-	export constexpr std::uint32_t ch(std::uint32_t x, std::uint32_t y, std::uint32_t z) {
+	constexpr std::uint32_t ch(const std::uint32_t x, const std::uint32_t y, const std::uint32_t z) {
 		return (x & y) | (~x & z);
 	}
 
-	export constexpr std::uint32_t maj(std::uint32_t x, std::uint32_t y, std::uint32_t z) {
+	constexpr std::uint32_t maj(const std::uint32_t x, const std::uint32_t y, const std::uint32_t z) {
 		return (x & y) | (x & z) | (y & z);
 	}
 

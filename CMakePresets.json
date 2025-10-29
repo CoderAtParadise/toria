@@ -22,7 +22,10 @@
         "value": "x64",
         "strategy": "external"
       },
-      "cacheVariables": { "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}" }
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+        "BUILD_TESTS": "ON"
+      }
     },
     {
       "$comment": [
@@ -294,7 +297,9 @@
       "displayName": "All Tests",
       "configurePreset": "windows_msvc",
       "configuration": "Debug",
-      "output": { "outputOnFailure": true }
+      "output": {
+        "outputOnFailure": true
+      }
     },
     {
       "name": "test_windows_clang",
