@@ -9,12 +9,16 @@ include(GNUInstallDirs)
 
 set(CMAKE_CXX_MODULE_STD 1)
 
+string(TOUPPER ${PROJECT_NAME} OPTION_PREFIX)
+
+option(${OPTION_PREFIX}_BUILD_WITH_ASAN "Build with AddressSanitizer" OFF)
+option(${OPTION_PREFIX}_BUILD_TESTS "Build Tests" OFF)
+
 add_library(${PROJECT_NAME} STATIC)
+set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "d")
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 
-option(ASAN "Build this target with AddressSanitizer" OFF)
-
-if (ASAN)
+if (${OPTION_PREFIX}_BUILD_WITH_ASAN)
     if (MSVC)
         target_compile_options(${PROJECT_NAME} PUBLIC /fsanitize=address)
     else ()
@@ -54,7 +58,6 @@ target_sources(
 )
 
 #[[==UUID==]]
-
 target_sources(
         ${PROJECT_NAME} PUBLIC
         FILE_SET ${PROJECT_NAME}_uuid
@@ -67,10 +70,6 @@ target_sources(
         src/uuid/uuid.cppm
 )
 
-option(BUILD_TESTS "Build Tests" OFF)
-if (BUILD_TESTS)
-    add_subdirectory(tests)
-endif ()
 #[[==INSTALL EXPORT TARGETS==]]
 install(TARGETS ${PROJECT_NAME}
         EXPORT ${PROJECT_NAME}-targets
@@ -91,7 +90,7 @@ install(EXPORT ${PROJECT_NAME}-targets
 
 write_basic_package_version_file(
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
-        VERSION ${PROJECT_NAME}
+        VERSION ${PROJECT_VERSION}
         COMPATIBILITY SameMajorVersion
 )
 
@@ -99,3 +98,7 @@ install(FILES
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
 
+if (${OPTION_PREFIX}_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif ()

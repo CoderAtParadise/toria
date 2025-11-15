@@ -325,15 +325,17 @@ namespace toria::util
 		using string_view_type = std::basic_string_view<CharT>;
 	public:
 		static constexpr super::size_type npos = string_view_type::npos;
+
+		// NOLINTNEXTLINE(google-explicit-constructor)
 		consteval basic_fixed_string(const CharT*) noexcept {}
 
 		// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-		[[nodiscard]] constexpr std::size_t size() const noexcept { return 0;}
+		[[nodiscard]] consteval std::size_t size() const noexcept { return 0;}
 
 		// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-		[[nodiscard]] constexpr bool empty() const noexcept { return true;}
+		[[nodiscard]] consteval bool empty() const noexcept { return true;}
 
-		[[nodiscard]] constexpr operator string_view_type() const noexcept { return ""; }
+		[[nodiscard]] consteval operator string_view_type() const noexcept { return ""; }
 	};
 
 	template<class CharT, std::size_t N>

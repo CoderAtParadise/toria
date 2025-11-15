@@ -23,8 +23,7 @@
         "strategy": "external"
       },
       "cacheVariables": {
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-        "BUILD_TESTS": "ON"
+        "TORIA_BUILD_TESTS": "ON"
       }
     },
     {
@@ -64,7 +63,7 @@
       "inherits": "windows_msvc",
       "displayName": "MSVC | ASAN",
       "cacheVariables": {
-        "ASAN": "ON"
+        "TORIA_BUILD_WITH_ASAN": "ON"
       }
     },
     {
@@ -88,7 +87,7 @@
       "inherits": "windows_clang",
       "displayName": "CLANG | ASAN",
       "cacheVariables": {
-        "ASAN": "ON"
+        "TORIA_BUILD_WITH_ASAN": "ON"
       }
     },
     {
@@ -133,7 +132,7 @@
       "inherits": "linux_gcc",
       "displayName": "GCC | ASAN",
       "cacheVariables": {
-        "ASAN": "ON"
+        "TORIA_BUILD_WITH_ASAN": "ON"
       }
     },
     {
@@ -155,7 +154,7 @@
       "inherits": "linux_clang",
       "displayName": "Clang | ASAN",
       "cacheVariables": {
-        "ASAN": "ON"
+        "TORIA_BUILD_WITH_ASAN": "ON"
       }
     },
     {
