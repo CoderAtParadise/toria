@@ -1,6 +1,7 @@
 import toria.uuid;
 import toria.crypto;
 import toria.util;
+import toria.system;
 import std;
 
 int main() {
@@ -19,6 +20,16 @@ int main() {
 	std::println("UUID V4 {}", gen4());
 	std::println("UUID V7 {}", gen7());
 	std::println("UUID v7 2 {}", gen7());
+	std::println("{}", toria::system::thread::get_thread_name(std::this_thread::get_id()));
+	toria::system::thread::set_thread_name(std::this_thread::get_id(), "MainThread");
+	std::println("{}", toria::system::thread::get_thread_name(std::this_thread::get_id()));
+	toria::system::thread::set_thread_name(std::this_thread::get_id(), "RenderThread");
+	std::println("{}", toria::system::thread::get_thread_name(std::this_thread::get_id()));
+	std::println("{}", toria::system::thread::get_thread_priority(std::this_thread::get_id()));
+	std::println("{}", std::chrono::system_clock::now());
+	std::println(
+		"{}", toria::system::process::get_creation_time());
+
 	return 0;
 	// 3e a6 8d 6e  2a 08 0b 85
 }

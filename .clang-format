@@ -24,6 +24,8 @@ BraceWrapping:
   SplitEmptyRecord: false
 BreakTemplateDeclarations: Yes
 IncludeCategories:
+    - Regex: '<windows.h>'
+      Priority: -1000
     - Regex: '^"'
       Priority: 2
     - Regex: '^<'

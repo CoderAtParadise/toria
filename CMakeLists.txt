@@ -27,7 +27,6 @@ if (${OPTION_PREFIX}_BUILD_WITH_ASAN)
     endif ()
 endif ()
 
-
 #[[==CRYPTO==]]
 target_sources(
         ${PROJECT_NAME} PUBLIC
@@ -42,6 +41,25 @@ target_sources(
         src/crypto/sha1.cppm
         src/crypto/std.cppm
 )
+
+#[[==SYSTEM==]]
+target_sources(
+        ${PROJECT_NAME} PUBLIC
+        FILE_SET ${PROJECT_NAME}_system
+        TYPE CXX_MODULES
+        BASE_DIRS "${CMAKE_CURRENT_LIST_DIR}/src/system"
+        FILES
+        src/system/process.cppm
+        src/system/std.cppm
+        src/system/system.cppm
+        src/system/thread.cppm
+)
+if (WIN32)
+    target_sources(
+            ${PROJECT_NAME} PRIVATE
+            src/system/windows.cpp
+    )
+endif ()
 
 #[[==UTIL==]]
 target_sources(
@@ -75,6 +93,8 @@ install(TARGETS ${PROJECT_NAME}
         EXPORT ${PROJECT_NAME}-targets
         FILE_SET ${PROJECT_NAME}_crypto
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}/crypto"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}/system"
+        FILE_SET ${PROJECT_NAME}_semver
         FILE_SET ${PROJECT_NAME}_util
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}/util"
         FILE_SET ${PROJECT_NAME}_uuid
