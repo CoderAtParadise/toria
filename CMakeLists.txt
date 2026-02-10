@@ -1,5 +1,6 @@
-cmake_minimum_required(VERSION 4.1 FATAL_ERROR)
+cmake_minimum_required(VERSION 4.2 FATAL_ERROR)
 set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "d0edc3af-4c50-42ea-a356-e2862fe7a444")
+set(CMAKE_EXPERIMENTAL_EXPORT_PACKAGE_INFO "b80be207-778e-46ba-8080-b23bba22639e")
 project(toria
         VERSION 0.1.0
         LANGUAGES CXX)
@@ -12,10 +13,9 @@ set(CMAKE_CXX_MODULE_STD 1)
 string(TOUPPER ${PROJECT_NAME} OPTION_PREFIX)
 
 option(${OPTION_PREFIX}_BUILD_WITH_ASAN "Build with AddressSanitizer" OFF)
-option(${OPTION_PREFIX}_BUILD_TESTS "Build Tests" OFF)
+option(${OPTION_PREFIX}_BUILD_TESTS "Build Tests" ${PROJECT_IS_TOP_LEVEL})
 
 add_library(${PROJECT_NAME} STATIC)
-set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "d")
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 
 if (${OPTION_PREFIX}_BUILD_WITH_ASAN)
@@ -61,6 +61,19 @@ if (WIN32)
     )
 endif ()
 
+#[[==SEMVER==]]
+target_sources(
+        ${PROJECT_NAME} PUBLIC
+        FILE_SET ${PROJECT_NAME}_semver
+        TYPE CXX_MODULES
+        BASE_DIRS "${CMAKE_CURRENT_LIST_DIR}/src/semver"
+        FILES
+        src/semver/semver.cppm
+        src/semver/impl.cppm
+        src/semver/range.cppm
+        src/semver/std.cppm
+)
+
 #[[==UTIL==]]
 target_sources(
         ${PROJECT_NAME} PUBLIC
@@ -93,30 +106,34 @@ install(TARGETS ${PROJECT_NAME}
         EXPORT ${PROJECT_NAME}-targets
         FILE_SET ${PROJECT_NAME}_crypto
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}/crypto"
+        FILE_SET ${PROJECT_NAME}_system
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}/system"
         FILE_SET ${PROJECT_NAME}_semver
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}/semver"
         FILE_SET ${PROJECT_NAME}_util
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}/util"
         FILE_SET ${PROJECT_NAME}_uuid
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}/uuid"
 )
 
-install(EXPORT ${PROJECT_NAME}-targets
-        FILE "${PROJECT_NAME}-config.cmake"
-        NAMESPACE ${PROJECT_NAME}::
-        CXX_MODULES_DIRECTORY
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
-)
+install(PACKAGE_INFO ${PROJECT_NAME} EXPORT ${PROJECT_NAME}-targets)
 
-write_basic_package_version_file(
-        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
-        VERSION ${PROJECT_VERSION}
-        COMPATIBILITY SameMajorVersion
-)
+#install(EXPORT ${PROJECT_NAME}-targets
+#        FILE "${PROJECT_NAME}-config.cmake"
+#        NAMESPACE ${PROJECT_NAME}::
+#        CXX_MODULES_DIRECTORY
+#        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+#)
 
-install(FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+#write_basic_package_version_file(
+#        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+#        VERSION ${PROJECT_VERSION}
+#        COMPATIBILITY SameMajorVersion
+#)
+
+#install(FILES
+#        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+#        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
 
 if (${OPTION_PREFIX}_BUILD_TESTS)
     enable_testing()

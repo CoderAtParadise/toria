@@ -13,10 +13,10 @@ namespace toria::crypto
 		constexpr hash() noexcept { this->reset(); }
 
 		template<class CharType, class Traits>
-		constexpr void hashString(std::basic_string_view<CharType, Traits> str) {
+		constexpr void hash_string(std::basic_string_view<CharType, Traits> str) {
 			this->reset();
 			if consteval {
-				std::span<const std::byte> bytes = util::as_bytes(str);
+				auto bytes = util::as_bytes(str);
 				this->update(bytes);
 			}
 			else {
@@ -25,7 +25,7 @@ namespace toria::crypto
 			this->finalize();
 		}
 
-		constexpr void hashString(const std::string_view str) { this->hashString<char>(str); }
+		constexpr void hash_string(const std::string_view str) { this->hash_string<char>(str); }
 
 		template<class CharType, class Traits>
 		void hashStream(const std::basic_ifstream<CharType, Traits>& stream) {
@@ -44,7 +44,7 @@ namespace toria::crypto
 		void hashFile(const std::filesystem::path& path) {
 			if (!std::filesystem::exists(path))
 				throw;
-			else if (std::filesystem::is_directory(path))
+			if (std::filesystem::is_directory(path))
 				return;
 			const std::ifstream stream{path, std::ios::binary};
 			return this->hashStream(stream);

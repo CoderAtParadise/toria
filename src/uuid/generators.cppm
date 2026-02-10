@@ -75,22 +75,21 @@ namespace toria::uuid::generators
 	class v4_generator
 	{
 	public:
-		v4_generator(Engine& engine = default_random<Engine>()) : m_generator(&engine) {}
+		explicit v4_generator(Engine& engine = default_random<Engine>()) : m_generator(&engine) {}
 
 		[[nodiscard]] uuid operator()() noexcept {
 			std::uint64_t generated[2]{0, 0};
 			_generate_random_bytes(generated, m_generator);
 			const std::span<std::byte, 16> bytes = std::as_writable_bytes(std::span{generated});
 			set_version_and_variant(bytes, uuid::version_type::v4);
-			return uuid(bytes);
+			return {bytes};
 		}
 
 	private:
 		Engine* m_generator = nullptr;
 	};
 
-	export template<
-		uuid::version_type Version, toria::crypto::is_hashing_algorithm hashing_algorithm>
+	export template<uuid::version_type Version, crypto::is_hashing_algorithm hashing_algorithm>
 	class name_generator
 	{
 	public:
@@ -117,7 +116,7 @@ namespace toria::uuid::generators
 			hash.finalize();
 			static_cast<void>(hash.get_bytes(bytes));
 			set_version_and_variant(bytes, Version);
-			return uuid{bytes};
+			return {bytes};
 		}
 
 		[[nodiscard]] constexpr uuid operator()(const std::string_view str) const {
@@ -136,7 +135,7 @@ namespace toria::uuid::generators
 		static constexpr std::uint64_t ns_in_milli = 1000;
 
 	public:
-		v7_generator(Engine& engine = default_random<Engine>()) : m_generator(&engine) {}
+		explicit v7_generator(Engine& engine = default_random<Engine>()) : m_generator(&engine) {}
 
 		template<is_clock Clock = std::chrono::system_clock>
 		[[nodiscard]] uuid operator()(std::chrono::time_point<Clock> point) noexcept {
@@ -147,16 +146,13 @@ namespace toria::uuid::generators
 					.time_since_epoch()
 					.count();
 			const std::uint64_t milli = micro / 1000;
-			const std::uint16_t precision = static_cast<std::uint16_t>(
+			const auto precision = static_cast<std::uint16_t>(
 				((micro % ns_in_milli) * (1 << sub_ms_bits)) / ns_in_milli);
-			// Yes this is dumb with the number of byteswap's.
-			// Is there any performance difference doing it this way? No...
-			// But hey it's works
 			raw_bytes[0] =
 				std::byteswap(std::byteswap(std::byteswap(milli) >> 16) | precision & 0x0FFF);
 			const std::span bytes{std::as_writable_bytes(std::span{raw_bytes})};
 			set_version_and_variant(bytes, uuid::version_type::v7);
-			return uuid(bytes);
+			return {bytes};
 		}
 
 		template<is_clock clock = std::chrono::system_clock>

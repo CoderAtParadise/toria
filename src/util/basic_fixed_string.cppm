@@ -8,6 +8,7 @@ namespace toria::util
 	class basic_fixed_string : public std::array<CharT, N>
 	{
 		using super = std::array<CharT, N>;
+
 	public:
 		using traits_type = Traits;
 		using iterator = super::const_iterator;
@@ -29,10 +30,6 @@ namespace toria::util
 		consteval basic_fixed_string(const std::span<const super::value_type, N> in) noexcept
 			: super{in} {}
 
-		// NOLINTNEXTLINE(google-explicit-constructor)
-		consteval basic_fixed_string(const std::span<typename super::value_type, N> in) noexcept
-			: super{in} {}
-
 		[[nodiscard]] constexpr super::size_type length() const noexcept { return this->size(); }
 
 		[[nodiscard]] constexpr super::const_pointer c_str() const noexcept { return this->data(); }
@@ -47,8 +44,8 @@ namespace toria::util
 		[[nodiscard]] constexpr reverse_iterator rbegin() noexcept { return this->rbegin(); }
 		[[nodiscard]] constexpr reverse_iterator rend() noexcept { return this->rend(); }
 
-
-		constexpr super::size_type copy(CharT* dest, super::size_type count, super::size_type pos = 0) const
+		constexpr super::size_type
+		copy(CharT* dest, super::size_type count, super::size_type pos = 0) const
 			requires(pos <= super::size())
 		{
 			const typename super::size_type rcount = std::min(count, super::size() - pos);
@@ -64,7 +61,7 @@ namespace toria::util
 		}
 
 		constexpr auto substr(super::size_type Off, super::size_type Count = npos) const noexcept {
-			return view().substr(Off,Count);
+			return view().substr(Off, Count);
 		}
 
 		template<typename super::size_type M>
@@ -92,7 +89,7 @@ namespace toria::util
 		[[nodiscard]] constexpr super::const_reference operator[](super::size_type pos) const
 			requires(pos < this->size())
 		{
-			return this->operator[](pos);
+			return super::operator[](pos);
 		}
 
 		[[nodiscard]] constexpr super::const_reference at(super::size_type pos) const
@@ -112,41 +109,41 @@ namespace toria::util
 		}
 
 		template<typename super::size_type M>
-		[[nodiscard]] constexpr super::size_type
-		find(const basic_fixed_string<CharT, M, Traits>& str, super::size_type pos = 0) const noexcept {
+		[[nodiscard]] constexpr super::size_type find(
+			const basic_fixed_string<CharT, M, Traits>& str,
+			super::size_type pos = 0) const noexcept {
 			if constexpr (M > this->size())
 				return npos;
 			return view().find(str.view(), pos);
 		}
-
-		// NOLINTBEGIN(readability-convert-member-functions-to-static)
 		[[nodiscard]] constexpr super::size_type
-		find(string_view_type view, super::size_type pos = 0) const noexcept {
-			return view().find(view, pos);
+		find(string_view_type view, super::size_type pos = 0) noexcept {
+			return this->view().find(view, pos);
 		}
-		// NOLINTEND(readability-convert-member-functions-to-static)
-
 		[[nodiscard]] constexpr super::size_type
 		find(const CharT* s, super::size_type pos, super::size_type n) const noexcept {
 			return view().find(s, pos, n);
 		}
-		[[nodiscard]] constexpr super::size_type find(const CharT* s, super::size_type pos = 0) const noexcept {
+		[[nodiscard]] constexpr super::size_type
+		find(const CharT* s, super::size_type pos = 0) const noexcept {
 			return view().find(s, pos);
 		}
-		[[nodiscard]] constexpr super::size_type find(CharT ch, super::size_type pos = 0) const noexcept {
+		[[nodiscard]] constexpr super::size_type
+		find(CharT ch, super::size_type pos = 0) const noexcept {
 			return view().find(ch, pos);
 		}
 
 		template<typename super::size_type M>
 		[[nodiscard]] constexpr super::size_type rfind(
-			const basic_fixed_string<CharT, M, Traits>& str, super::size_type pos = npos) const noexcept {
+			const basic_fixed_string<CharT, M, Traits>& str,
+			super::size_type pos = npos) const noexcept {
 			if constexpr (M > this->size())
 				return npos;
 			return view().rfind(str.view(), pos);
 		}
 		[[nodiscard]] constexpr super::size_type
 		rfind(string_view_type view, super::size_type pos = npos) const noexcept {
-			return view().rfind(view, pos);
+			return this->view().rfind(view, pos);
 		}
 		[[nodiscard]] constexpr super::size_type
 		rfind(const CharT* s, super::size_type pos, super::size_type n) const noexcept {
@@ -156,26 +153,24 @@ namespace toria::util
 		rfind(const CharT* s, super::size_type pos = npos) const noexcept {
 			return view().rfind(s, pos);
 		}
-		[[nodiscard]] constexpr super::size_type rfind(CharT ch, super::size_type pos = npos) const noexcept {
+		[[nodiscard]] constexpr super::size_type
+		rfind(CharT ch, super::size_type pos = npos) const noexcept {
 			return view().rfind(ch, pos);
 		}
 
 		template<typename super::size_type M>
 		[[nodiscard]] constexpr super::size_type find_first_of(
-			const basic_fixed_string<CharT, M, Traits>& str, super::size_type pos = 0) const noexcept {
+			const basic_fixed_string<CharT, M, Traits>& str,
+			super::size_type pos = 0) const noexcept {
 			if constexpr (M > this->size())
 				return npos;
 			return view().find_first_of(str.view(), pos);
 		}
-
-		// NOLINTBEGIN(readability-convert-member-functions-to-static)
-		[[nodiscard]] constexpr super::size_type
-		find_first_of(string_view_type view, super::size_type pos = 0) const noexcept {
-
-			return view().find_first_of(view, pos);
+		[[nodiscard]] constexpr auto
+		find_first_of(string_view_type view, super::size_type pos = 0) const noexcept
+			-> super::size_type {
+			return this->view().find_first_of(view, pos);
 		}
-		// NOLINTEND(readability-convert-member-functions-to-static)
-
 		[[nodiscard]] constexpr super::size_type
 		find_first_of(const CharT* s, super::size_type pos, super::size_type n) const noexcept {
 			return view().find_first_of(s, pos, n);
@@ -191,14 +186,15 @@ namespace toria::util
 
 		template<typename super::size_type M>
 		[[nodiscard]] constexpr super::size_type find_last_of(
-			const basic_fixed_string<CharT, M, Traits>& str, super::size_type pos = npos) const noexcept {
+			const basic_fixed_string<CharT, M, Traits>& str,
+			super::size_type pos = npos) const noexcept {
 			if constexpr (M > this->size())
 				return npos;
 			return view().find_last_of(str.view(), pos);
 		}
 		[[nodiscard]] constexpr super::size_type
 		find_last_of(string_view_type view, super::size_type pos = npos) const noexcept {
-			return view().find_last_of(view, pos);
+			return this->view().find_last_of(view, pos);
 		}
 		[[nodiscard]] constexpr super::size_type
 		find_last_of(const CharT* s, super::size_type pos, super::size_type n) const noexcept {
@@ -215,19 +211,16 @@ namespace toria::util
 
 		template<typename super::size_type M>
 		[[nodiscard]] constexpr super::size_type find_first_not_of(
-			const basic_fixed_string<CharT, M, Traits>& str, super::size_type pos = 0) const noexcept {
+			const basic_fixed_string<CharT, M, Traits>& str,
+			super::size_type pos = 0) const noexcept {
 			if constexpr (M > this->size())
 				return npos;
 			return view().find_first_not_of(str.view(), pos);
 		}
-
-		// NOLINTBEGIN(readability-convert-member-functions-to-static)
 		[[nodiscard]] constexpr super::size_type
-		find_first_not_of(string_view_type v, super::size_type pos = 0) const noexcept {
-			return v().find_first_not_of(v, pos);
+		find_first_not_of(string_view_type view, super::size_type pos = 0) const noexcept {
+			return this->view().find_first_not_of(view, pos);
 		}
-		// NOLINTEND(readability-convert-member-functions-to-static)
-
 		[[nodiscard]] constexpr super::size_type
 		find_first_not_of(const CharT* s, super::size_type pos, super::size_type n) const noexcept {
 			return view().find_first_not_of(s, pos, n);
@@ -243,14 +236,15 @@ namespace toria::util
 
 		template<typename super::size_type M>
 		[[nodiscard]] constexpr super::size_type find_last_not_of(
-			const basic_fixed_string<CharT, M, Traits>& str, super::size_type pos = npos) const noexcept {
+			const basic_fixed_string<CharT, M, Traits>& str,
+			super::size_type pos = npos) const noexcept {
 			if constexpr (M > this->size())
 				return npos;
 			return view().find_last_not_of(str.view(), pos);
 		}
 		[[nodiscard]] constexpr super::size_type
-		find_last_not_of(string_view_type v, super::size_type pos = npos) const noexcept {
-			return view().find_last_not_of(v, pos);
+		find_last_not_of(string_view_type view, super::size_type pos = npos) const noexcept {
+			return this->view().find_last_not_of(view, pos);
 		}
 		[[nodiscard]] constexpr super::size_type
 		find_last_not_of(const CharT* s, super::size_type pos, super::size_type n) const noexcept {
@@ -265,33 +259,34 @@ namespace toria::util
 			return view().find_last_not_of(ch, pos);
 		}
 
-		[[nodiscard]] constexpr int compare(string_view_type v) const noexcept {
-			return view().compar(v);
+		[[nodiscard]] constexpr int compare(string_view_type view) const noexcept {
+			return this->view().compar(view);
 		}
 		[[nodiscard]] constexpr int
-		compare(super::size_type pos1, super::size_type count1, string_view_type v) const {
-			return view().compare(pos1, count1, v);
+		compare(super::size_type pos, super::size_type count, string_view_type view) const {
+			return this->view().compare(pos, count, view);
 		}
 		[[nodiscard]] constexpr int compare(
-			super::size_type pos1, super::size_type count1, string_view_type v, super::size_type pos2,
-			super::size_type count2) {
-			return view().compare(pos1, count1, v, pos2, count2);
+			super::size_type pos1, super::size_type count1, string_view_type view,
+			super::size_type pos2, super::size_type count2) {
+			return this->view().compare(pos1, count1, view, pos2, count2);
 		}
 
 		[[nodiscard]] constexpr int compare(const CharT* s) const { return view().compare(s); }
 
 		[[nodiscard]] constexpr int
-		compare(super::size_type pos1, super::size_type count1, const CharT* s) const {
-			return view().compare(pos1, count1, s);
+		compare(super::size_type pos, super::size_type count, const CharT* s) const {
+			return view().compare(pos, count, s);
 		}
 
-		[[nodiscard]] constexpr int
-		compare(super::size_type pos1,super::size_type count1, const CharT* s, super::size_type count2) const {
+		[[nodiscard]] constexpr int compare(
+			super::size_type pos1, super::size_type count1, const CharT* s,
+			super::size_type count2) const {
 			return view().compare(pos1, count1, s, count2);
 		}
 
-		[[nodiscard]] constexpr bool starts_with(string_view_type v) const noexcept {
-			return view().starts_with(v);
+		[[nodiscard]] constexpr bool starts_with(string_view_type view) const noexcept {
+			return this->view().starts_with(view);
 		}
 		[[nodiscard]] constexpr bool starts_with(CharT ch) const noexcept {
 			return view().starts_with(ch);
@@ -299,16 +294,16 @@ namespace toria::util
 		[[nodiscard]] constexpr bool starts_with(const CharT* s) const {
 			return view().starts_with(s);
 		}
-		[[nodiscard]] constexpr bool ends_with(string_view_type v) const noexcept {
-			return view().ends_with(v);
+		[[nodiscard]] constexpr bool ends_with(string_view_type view) const noexcept {
+			return this->view().ends_with(view);
 		}
 		[[nodiscard]] constexpr bool ends_with(CharT ch) const noexcept {
 			return view().ends_with(ch);
 		}
 		[[nodiscard]] constexpr bool ends_with(const CharT* s) const { return view().ends_with(s); }
 
-		[[nodiscard]] constexpr bool contains(string_view_type v) const noexcept {
-			return view().contains(v);
+		[[nodiscard]] constexpr bool contains(string_view_type view) const noexcept {
+			return this->view().contains(view);
 		}
 		[[nodiscard]] constexpr bool contains(CharT ch) const noexcept {
 			return view().contains(ch);
@@ -319,21 +314,20 @@ namespace toria::util
 	};
 
 	template<class CharT>
-	class basic_fixed_string<CharT,0,std::char_traits<CharT>>
+	class basic_fixed_string<CharT, 0, std::char_traits<CharT>>
 	{
-		using  super = std::array<CharT,1>;
+		using super = std::array<CharT, 1>;
 		using string_view_type = std::basic_string_view<CharT>;
+
 	public:
 		static constexpr super::size_type npos = string_view_type::npos;
 
 		// NOLINTNEXTLINE(google-explicit-constructor)
 		consteval basic_fixed_string(const CharT*) noexcept {}
 
-		// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-		[[nodiscard]] consteval std::size_t size() const noexcept { return 0;}
+		[[nodiscard]] static constexpr super::size_type size() noexcept { return 0; }
 
-		// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-		[[nodiscard]] consteval bool empty() const noexcept { return true;}
+		[[nodiscard]] static consteval bool empty() noexcept { return true; }
 
 		[[nodiscard]] consteval operator string_view_type() const noexcept { return ""; }
 	};

@@ -24,10 +24,8 @@ namespace toria::crypto
 			m_finalized = false;
 		}
 
-		// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 		constexpr hash_err update(const std::byte byte) {
-			std::array temp{byte};
-			return update(temp);
+			return this->update({&byte,1});
 		}
 
 		constexpr hash_err update(const std::span<const std::byte> bytes) {
@@ -144,7 +142,6 @@ namespace toria::crypto
 			return hash_err::SUCCESS;
 		}
 
-		// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 		constexpr void transform() noexcept {
 			std::array<std::uint32_t, 16> buffer{};
 			auto [A, B, C, D] = m_digest;

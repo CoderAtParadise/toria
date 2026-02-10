@@ -8,7 +8,7 @@
   "version": 10,
   "cmakeMinimumRequired": {
     "major": 4,
-    "minor": 1,
+    "minor": 2,
     "patch": 0
   },
   "configurePresets": [
@@ -34,7 +34,7 @@
         "Clang",
         "Clang | ASAN"
       ],
-      "name": "windows_base",
+      "name": "windows",
       "hidden": true,
       "inherits": "base",
       "condition": {
@@ -51,25 +51,25 @@
       }
     },
     {
-      "name": "windows_msvc",
-      "inherits": "windows_base",
+      "name": "windows.msvc",
+      "inherits": "windows",
       "displayName": "MSVC",
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "cl"
       }
     },
     {
-      "name": "windows_msvc_asan",
-      "inherits": "windows_msvc",
+      "name": "windows.msvc-asan",
+      "inherits": "windows.msvc",
       "displayName": "MSVC | ASAN",
       "cacheVariables": {
         "TORIA_BUILD_WITH_ASAN": "ON"
       }
     },
     {
-      "name": "windows_clang",
+      "name": "windows.clang",
       "hidden": true,
-      "inherits": "windows_base",
+      "inherits": "windows",
       "displayName": "Clang",
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "clang-cl"
@@ -82,9 +82,9 @@
       }
     },
     {
-      "name": "windows_clang_asan",
+      "name": "windows.clang-asan",
       "hidden": true,
-      "inherits": "windows_clang",
+      "inherits": "windows.clang",
       "displayName": "CLANG | ASAN",
       "cacheVariables": {
         "TORIA_BUILD_WITH_ASAN": "ON"
@@ -96,7 +96,7 @@
         "GCC",
         "Clang"
       ],
-      "name": "linux_base",
+      "name": "linux",
       "inherits": "base",
       "condition": {
         "type": "equals",
@@ -115,8 +115,8 @@
       }
     },
     {
-      "name": "linux_gcc",
-      "inherits": "linux_base",
+      "name": "linux.gcc",
+      "inherits": "linux",
       "displayName": "GCC",
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "g++"
@@ -128,16 +128,16 @@
       }
     },
     {
-      "name": "linux_gcc_asan",
-      "inherits": "linux_gcc",
+      "name": "linux.gcc-asan",
+      "inherits": "linux.gcc",
       "displayName": "GCC | ASAN",
       "cacheVariables": {
         "TORIA_BUILD_WITH_ASAN": "ON"
       }
     },
     {
-      "name": "linux_clang",
-      "inherits": "linux_base",
+      "name": "linux.clang",
+      "inherits": "linux",
       "displayName": "Clang",
       "cacheVariables": {
         "CMAKE_CXX_COMPILER": "clang++",
@@ -150,8 +150,8 @@
       }
     },
     {
-      "name": "linux_clang_asan",
-      "inherits": "linux_clang",
+      "name": "linux.clang-asan",
+      "inherits": "linux.clang",
       "displayName": "Clang | ASAN",
       "cacheVariables": {
         "TORIA_BUILD_WITH_ASAN": "ON"
@@ -161,7 +161,7 @@
       "$comment": [
         "MacOS Configurations:"
       ],
-      "name": "macos_base",
+      "name": "macos-base",
       "inherits": "base",
       "condition": {
         "type": "equals",
@@ -182,128 +182,123 @@
   ],
   "buildPresets": [
     {
-      "name": "windows_debug_msvc",
+      "name": "windows.msvc.debug",
       "displayName": "Debug",
-      "configurePreset": "windows_msvc",
+      "configurePreset": "windows.msvc",
       "configuration": "Debug"
     },
     {
-      "name": "windows_qa_msvc",
+      "name": "windows.msvc.qa",
       "displayName": "Quality Assurance",
-      "configurePreset": "windows_msvc",
+      "configurePreset": "windows.msvc",
       "configuration": "RelWithDebInfo"
     },
     {
-      "name": "windows_release_msvc",
+      "name": "windows.msvc.release-",
       "displayName": "Release",
-      "configurePreset": "windows_msvc",
+      "configurePreset": "windows.msvc",
       "configuration": "Release"
     },
     {
-      "name": "windows_debug_msvc_asan",
+      "name": "windows.msvc-asan.debug",
       "displayName": "Debug ASAN",
-      "configurePreset": "windows_msvc_asan",
+      "configurePreset": "windows.msvc-asan",
       "configuration": "Debug"
     },
     {
-      "name": "windows_qa_msvc_asan",
+      "name": "windows.msvc-asan.qa",
       "displayName": "Quality Assurance ASAN",
-      "configurePreset": "windows_msvc_asan",
+      "configurePreset": "windows.msvc-asan",
       "configuration": "RelWithDebInfo"
     },
     {
-      "name": "windows_release_msvc_asan",
+      "name": "windows.msvc-asan.release",
       "displayName": "Release ASAN",
-      "configurePreset": "windows_msvc_asan",
+      "configurePreset": "windows.msvc-asan",
       "configuration": "Release"
     },
     {
-      "name": "windows_debug_clang",
+      "name": "windows.clang.debug",
       "displayName": "Debug",
-      "configurePreset": "windows_clang",
+      "configurePreset": "windows.clang",
       "configuration": "Debug"
     },
     {
-      "name": "windows_qa_clang",
+      "name": "windows.clang.qa",
       "displayName": "Quality Assurance",
-      "configurePreset": "windows_clang",
+      "configurePreset": "windows.clang",
       "configuration": "RelWithDebInfo"
     },
     {
-      "name": "windows_release_clang",
+      "name": "windows.clang.release",
       "displayName": "Release",
-      "configurePreset": "windows_clang",
+      "configurePreset": "windows.clang",
       "configuration": "Release"
     },
     {
-      "name": "windows_debug_clang_asan",
+      "name": "windows.clang-asan.debug",
       "displayName": "Debug",
-      "configurePreset": "windows_clang_asan",
+      "configurePreset": "windows.clang-asan",
       "configuration": "Debug"
     },
     {
-      "name": "windows_qa_clang_asan",
+      "name": "windows.clang-asan.qa",
       "displayName": "Quality Assurance",
-      "configurePreset": "windows_clang_asan",
+      "configurePreset": "windows.clang-asan",
       "configuration": "RelWithDebInfo"
     },
     {
-      "name": "windows_release_clang_asan",
+      "name": "windows.clang-asan.release",
       "displayName": "Release",
-      "configurePreset": "windows_clang_asan",
+      "configurePreset": "windows.clang-asan",
       "configuration": "Release"
     },
     {
-      "name": "linux_debug_clang",
+      "name": "linux.clang.debug",
       "displayName": "Debug",
-      "configurePreset": "linux_clang",
+      "configurePreset": "linux.clang",
       "configuration": "Debug"
     },
     {
-      "name": "linux_release_clang",
-      "displayName": "Release",
-      "configurePreset": "linux_clang",
+      "name": "linux.clang.qa",
+      "displayName": "Quality Assurance",
+      "configurePreset": "linux.clang",
       "configuration": "RelWithDebInfo"
     },
     {
-      "name": "linux_dist_clang",
-      "displayName": "Distribution",
-      "configurePreset": "linux_clang",
+      "name": "linux.clang.release",
+      "displayName": "Release",
+      "configurePreset": "linux.clang",
       "configuration": "Release"
     },
     {
-      "name": "linux_debug_gcc",
+      "name": "linux.gcc.debug",
       "displayName": "Debug",
-      "configurePreset": "linux_gcc",
+      "configurePreset": "linux.gcc",
       "configuration": "Debug"
     },
     {
-      "name": "linux_release_gcc",
-      "displayName": "Release",
-      "configurePreset": "linux_gcc",
+      "name": "linux.gcc.qa",
+      "displayName": "Quality Assurance",
+      "configurePreset": "linux.gcc",
       "configuration": "RelWithDebInfo"
     },
     {
-      "name": "linux_dist_gcc",
-      "displayName": "Distribution",
-      "configurePreset": "linux_gcc",
+      "name": "linux.gcc.release",
+      "displayName": "Release",
+      "configurePreset": "linux.gcc",
       "configuration": "Release"
     }
   ],
   "testPresets": [
     {
-      "name": "test_windows_msvc",
+      "name": "windows.msvc.test.all",
       "displayName": "All Tests",
-      "configurePreset": "windows_msvc",
+      "configurePreset": "windows.msvc",
       "configuration": "Debug",
       "output": {
         "outputOnFailure": true
       }
-    },
-    {
-      "name": "test_windows_clang",
-      "configurePreset": "windows_clang",
-      "configuration": "Debug"
     }
   ]
 }

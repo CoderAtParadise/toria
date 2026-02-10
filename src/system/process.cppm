@@ -12,28 +12,26 @@ namespace toria::system
 			std::chrono::time_point<std::chrono::file_clock> user_time{};
 		};
 
-		static auto get_current_id() noexcept -> std::uint64_t;
-		static auto get_creation_time() noexcept
-			-> std::chrono::time_point<std::chrono::file_clock>;
-		static auto get_usage_time() noexcept -> usage;
-	};
+		std::uint64_t get_current_id() noexcept;
+		std::chrono::time_point<std::chrono::file_clock> get_creation_time() noexcept;
+		usage get_usage_time() noexcept;
+	};  // namespace process
 
 	export struct unique_pid_token
 	{
-		static auto get_unique_pid_token() noexcept -> unique_pid_token {
+		static unique_pid_token get_unique_pid_token() noexcept  {
 			return {process::get_current_id(), process::get_creation_time()};
 		}
 
-		static auto get_unique_pid_token_for_process(std::uint64_t pid) noexcept
-			-> unique_pid_token;
+		static unique_pid_token get_unique_pid_token_for_process(std::uint64_t pid) noexcept;
 
-		friend auto operator==(const unique_pid_token& lhs, const unique_pid_token& rhs) noexcept
-			-> bool {
+		friend bool operator==(const unique_pid_token& lhs, const unique_pid_token& rhs) noexcept {
 			return lhs.pid == rhs.pid && lhs.timestamp == rhs.timestamp;
 		}
 
-		std::uint64_t pid{};
+		std::uint64_t pid{0};
 		std::chrono::time_point<std::chrono::file_clock> timestamp{};
 	};
 
+	constexpr unique_pid_token NULL{};
 }  // namespace toria::system

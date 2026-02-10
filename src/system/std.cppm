@@ -7,12 +7,10 @@ import :process;
 template<>
 struct std::formatter<toria::system::thread::thread_priority>
 {
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+	static constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
 
-	// NOLINTBEGIN(readability-convert-member-functions-to-static)
-	auto
-	format(const toria::system::thread::thread_priority& value, std::format_context& ctx) const {
+	static auto
+	format(const toria::system::thread::thread_priority& value, std::format_context& ctx) {
 		switch (value) {
 			case toria::system::thread::thread_priority::INACTIVE:
 				return std::format_to(ctx.out(), "{}", "INACTIVE");

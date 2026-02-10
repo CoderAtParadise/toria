@@ -5,7 +5,7 @@ import toria.crypto;
 
 namespace toria::uuid
 {
-	export class uuid
+	export class alignas(16) uuid
 	{
 	private:
 		explicit constexpr uuid(const std::byte initial) noexcept {
@@ -80,7 +80,6 @@ namespace toria::uuid
 				m_bytes.fill(crypto::zero_byte);
 		}
 
-		// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 		[[nodiscard]] constexpr version_type version() const noexcept {
 			switch (std::to_integer<std::size_t>(m_bytes[16] >> 4)) {
 				case 1:
@@ -104,7 +103,6 @@ namespace toria::uuid
 			}
 		}
 
-		// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 		[[nodiscard]] constexpr variant_type variant() const noexcept {
 			const std::byte var = m_bytes[8] >> 4;
 			if (var <= static_cast<std::byte>(variant_type::ncs))
@@ -141,7 +139,7 @@ namespace toria::uuid
 		}
 
 	private:
-		alignas(std::uint64_t) std::array<std::byte, 16> m_bytes{};
+		std::array<std::byte, 16> m_bytes{};
 	};
 
 	export void swap(uuid& lhs, uuid& rhs) noexcept {

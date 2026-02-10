@@ -5,8 +5,6 @@ module toria.system;
 
 namespace toria::system
 {
-
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 	std::uint64_t process::get_current_id() noexcept {
 		static std::uint64_t current_process_id = []() -> std::uint64_t {
 			const DWORD pid = GetCurrentProcessId();
@@ -19,15 +17,11 @@ namespace toria::system
 		return static_cast<std::uint64_t>(ft->dwHighDateTime) << 32 | ft->dwLowDateTime;
 	}
 
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 	std::chrono::time_point<std::chrono::file_clock> process::get_creation_time() noexcept {
 		using time_point = std::chrono::time_point<std::chrono::file_clock>;
 		static auto creation_time = []() -> time_point {
-			const auto hProcess = GetCurrentProcess();
-			if (hProcess != nullptr) {
-				// ReSharper disable CppTooWideScopeInitStatement
-				FILETIME creationTime, dump;
-				// ReSharper restore
+			if (const auto hProcess = GetCurrentProcess(); hProcess != nullptr) {
+				FILETIME creationTime{}, dump{};
 				if (GetProcessTimes(hProcess, &creationTime, &dump, &dump, &dump)) {
 					return time_point{time_point::duration(fromFILETIME(&creationTime))};
 				}
@@ -37,14 +31,10 @@ namespace toria::system
 		return creation_time;
 	}
 
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	auto process::get_usage_time() noexcept -> process::usage {
+	process::usage process::get_usage_time() noexcept {
 		using time_point = std::chrono::time_point<std::chrono::file_clock>;
-		const auto hProcess = GetCurrentProcess();
-		if (hProcess != nullptr) {
-			// ReSharper disable CppTooWideScopeInitStatement
+		if (const auto hProcess = GetCurrentProcess(); hProcess != nullptr) {
 			FILETIME kernelTime, userTime, dump;
-			// ReSharper restore
 			if (GetProcessTimes(hProcess, &dump, &dump, &kernelTime, &userTime)) {
 				return {
 					time_point{time_point::duration(fromFILETIME(&kernelTime))},
@@ -54,24 +44,17 @@ namespace toria::system
 		return {};
 	}
 
-	auto unique_pid_token::get_unique_pid_token_for_process(std::uint64_t pid) noexcept
-		-> unique_pid_token {
+	unique_pid_token
+	unique_pid_token::get_unique_pid_token_for_process(std::uint64_t pid) noexcept {
 		using time_point = std::chrono::time_point<std::chrono::file_clock>;
-		const auto hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
-		if (hProcess != nullptr) {
-			// ReSharper disable CppTooWideScopeInitStatement
+		if (const auto hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+			hProcess != nullptr) {
 			FILETIME creationTime, dump;
-			// ReSharper restore
 			if (GetProcessTimes(hProcess, &creationTime, &dump, &dump, &dump)) {
 				return {pid, time_point{time_point::duration(fromFILETIME(&creationTime))}};
 			}
 		}
 		return {-1ull, {}};
-	}
-
-	system_info system_info::get_system_info() noexcept {
-		static system_info current_system_info = []() -> system_info { return {}; }();
-		return current_system_info;
 	}
 
 	std::string thread::get_thread_name(const std::thread::id threadId) noexcept {
@@ -126,7 +109,6 @@ namespace toria::system
 			default:
 				return thread::thread_priority::NORMAL;
 		}
-		return thread::thread_priority::NORMAL;
 	}
 
 	static int _map_priority_to_native(const thread::thread_priority priority) noexcept {
@@ -147,7 +129,6 @@ namespace toria::system
 			default:
 				return THREAD_PRIORITY_NORMAL;
 		}
-		return 0;
 	}
 
 	thread::thread_priority thread::get_thread_priority(const std::thread::id id) noexcept {
@@ -172,7 +153,8 @@ namespace toria::system
 		const auto hThread = OpenThread(THREAD_SET_LIMITED_INFORMATION, FALSE, underlying);
 		if (!hThread)
 			return false;
-		auto setToBackground = SUCCEEDED(SetThreadPriority(hThread, THREAD_MODE_BACKGROUND_BEGIN));
+		const auto setToBackground =
+			SUCCEEDED(SetThreadPriority(hThread, THREAD_MODE_BACKGROUND_BEGIN));
 		if (setToBackground) {
 			SetThreadPriority(hThread, THREAD_MODE_BACKGROUND_END);
 		}

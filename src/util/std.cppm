@@ -5,7 +5,7 @@ import :basic_fixed_string;
 
 template<class CharT, std::size_t N, class TTraits>
 struct std::formatter<toria::util::basic_fixed_string<CharT, N, TTraits>>
-	: public std::formatter<typename toria::util::basic_fixed_string<CharT,N,TTraits>::view_type>
+	: std::formatter<typename toria::util::basic_fixed_string<CharT,N,TTraits>::view_type>
 {
 	auto format(
 		const toria::util::basic_fixed_string<CharT, N, TTraits>& str,

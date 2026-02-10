@@ -30,7 +30,6 @@ namespace toria::crypto
 			return this->update(byte, false);
 		}
 
-		// NOLINTNEXTLINE(readability-make-member-function-const)
 		constexpr hash_err update(const std::span<const std::byte> bytes) noexcept {
 			if (m_finalized)
 				return hash_err::ALREADY_FINALIZED;
@@ -102,7 +101,6 @@ namespace toria::crypto
 			return hash_err::SUCCESS;
 		}
 
-		// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 		constexpr void update_block() noexcept {
 			std::array<std::uint32_t, 80> w{};
 			std::size_t idx;
