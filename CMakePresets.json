@@ -23,16 +23,15 @@
         "strategy": "external"
       },
       "cacheVariables": {
-        "TORIA_BUILD_TESTS": "ON"
       }
     },
     {
       "$comment": [
         "Windows Configurations:",
         "MSVC",
-        "MSVC | ASAN",
+        "MSVC | ASan",
         "Clang",
-        "Clang | ASAN"
+        "Clang | ASan"
       ],
       "name": "windows",
       "hidden": true,
@@ -61,7 +60,7 @@
     {
       "name": "windows.msvc-asan",
       "inherits": "windows.msvc",
-      "displayName": "MSVC | ASAN",
+      "displayName": "MSVC | ASan",
       "cacheVariables": {
         "TORIA_BUILD_WITH_ASAN": "ON"
       }
@@ -85,7 +84,7 @@
       "name": "windows.clang-asan",
       "hidden": true,
       "inherits": "windows.clang",
-      "displayName": "CLANG | ASAN",
+      "displayName": "CLANG | ASan",
       "cacheVariables": {
         "TORIA_BUILD_WITH_ASAN": "ON"
       }
@@ -130,9 +129,9 @@
     {
       "name": "linux.gcc-asan",
       "inherits": "linux.gcc",
-      "displayName": "GCC | ASAN",
+      "displayName": "GCC | ASan",
       "cacheVariables": {
-        "TORIA_BUILD_WITH_ASAN": "ON"
+        "TORIA_BUILD_WITH_ASan": "ON"
       }
     },
     {
@@ -152,9 +151,9 @@
     {
       "name": "linux.clang-asan",
       "inherits": "linux.clang",
-      "displayName": "Clang | ASAN",
+      "displayName": "Clang | ASan",
       "cacheVariables": {
-        "TORIA_BUILD_WITH_ASAN": "ON"
+        "TORIA_BUILD_WITH_ASan": "ON"
       }
     },
     {
@@ -183,85 +182,85 @@
   "buildPresets": [
     {
       "name": "windows.msvc.debug",
-      "displayName": "Debug",
+      "displayName": "MSVC | Debug",
       "configurePreset": "windows.msvc",
       "configuration": "Debug"
     },
     {
       "name": "windows.msvc.qa",
-      "displayName": "Quality Assurance",
+      "displayName": "MSVC | Quality Assurance",
       "configurePreset": "windows.msvc",
       "configuration": "RelWithDebInfo"
     },
     {
-      "name": "windows.msvc.release-",
-      "displayName": "Release",
+      "name": "windows.msvc.release",
+      "displayName": "MSVC | Release",
       "configurePreset": "windows.msvc",
       "configuration": "Release"
     },
     {
       "name": "windows.msvc-asan.debug",
-      "displayName": "Debug ASAN",
+      "displayName": "MSVC ASan | Debug",
       "configurePreset": "windows.msvc-asan",
       "configuration": "Debug"
     },
     {
       "name": "windows.msvc-asan.qa",
-      "displayName": "Quality Assurance ASAN",
+      "displayName": "MSVC ASan | Quality Assurance",
       "configurePreset": "windows.msvc-asan",
       "configuration": "RelWithDebInfo"
     },
     {
       "name": "windows.msvc-asan.release",
-      "displayName": "Release ASAN",
+      "displayName": "MSVC ASan | Release",
       "configurePreset": "windows.msvc-asan",
       "configuration": "Release"
     },
     {
       "name": "windows.clang.debug",
-      "displayName": "Debug",
+      "displayName": "Clang | Debug",
       "configurePreset": "windows.clang",
       "configuration": "Debug"
     },
     {
       "name": "windows.clang.qa",
-      "displayName": "Quality Assurance",
+      "displayName": "Clang | Quality Assurance",
       "configurePreset": "windows.clang",
       "configuration": "RelWithDebInfo"
     },
     {
       "name": "windows.clang.release",
-      "displayName": "Release",
+      "displayName": "Clang | Release",
       "configurePreset": "windows.clang",
       "configuration": "Release"
     },
     {
       "name": "windows.clang-asan.debug",
-      "displayName": "Debug",
+      "displayName": "Clang ASan | Debug",
       "configurePreset": "windows.clang-asan",
       "configuration": "Debug"
     },
     {
       "name": "windows.clang-asan.qa",
-      "displayName": "Quality Assurance",
+      "displayName": "Clang ASan | Quality Assurance",
       "configurePreset": "windows.clang-asan",
       "configuration": "RelWithDebInfo"
     },
     {
       "name": "windows.clang-asan.release",
-      "displayName": "Release",
+      "displayName": "Clang ASan | Release",
       "configurePreset": "windows.clang-asan",
       "configuration": "Release"
     },
     {
       "name": "linux.clang.debug",
-      "displayName": "Debug",
+      "displayName": "Clang | Debug",
       "configurePreset": "linux.clang",
       "configuration": "Debug"
     },
     {
       "name": "linux.clang.qa",
-      "displayName": "Quality Assurance",
+      "displayName": "Clang | Quality Assurance",
       "configurePreset": "linux.clang",
       "configuration": "RelWithDebInfo"
     },
@@ -293,7 +292,7 @@
   "testPresets": [
     {
       "name": "windows.msvc.test.all",
-      "displayName": "All Tests",
+      "displayName": "MSVC | Debug | All Tests ",
       "configurePreset": "windows.msvc",
       "configuration": "Debug",
       "output": {

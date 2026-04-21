@@ -11,14 +11,11 @@ include(CMakeDependentOption)
 include(GNUInstallDirs)
 include(CTest)
 
-string(TOUPPER ${PROJECT_NAME} OPTION_PREFIX)
 
 option(TORIA_BUILD_WITH_ASAN "Build with AddressSanitizer" OFF)
 cmake_dependent_option(TORIA_BUILD_TESTS "Build toria Tests" ON "BUILD_TESTING;PROJECT_IS_TOP_LEVEL" OFF)
 option(TORIA_INSTALL_USING_CPS "Install using cps" OFF)
 
-add_library(${PROJECT_NAME} STATIC)
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_23)
 add_library(toria STATIC)
 target_compile_features(toria PUBLIC cxx_std_23)
 
@@ -115,18 +112,6 @@ target_sources(
 )
 
 #[[==INSTALL EXPORT TARGETS==]]
-install(TARGETS ${PROJECT_NAME}
-        EXPORT ${PROJECT_NAME}-targets
-        FILE_SET ${PROJECT_NAME}_crypto
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}/crypto"
-        FILE_SET ${PROJECT_NAME}_system
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}/system"
-        FILE_SET ${PROJECT_NAME}_semver
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}/semver"
-        FILE_SET ${PROJECT_NAME}_util
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}/util"
-        FILE_SET ${PROJECT_NAME}_uuid
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cxx/${PROJECT_NAME}/uuid"
 install(TARGETS toria
         EXPORT toria-targets
         FILE_SET toria_coro

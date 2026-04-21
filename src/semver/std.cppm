@@ -44,8 +44,7 @@ template<
 	toria::semver::identifier_storage BuildMetadataTagStorage>
 struct std::formatter<toria::semver::version_impl<PrereleaseTagStorage, BuildMetadataTagStorage>>
 {
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+	static constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
 
 	auto format(
 		const toria::semver::version_impl<PrereleaseTagStorage, BuildMetadataTagStorage>& version,
