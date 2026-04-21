@@ -26,23 +26,16 @@ namespace toria::util
 		consteval basic_fixed_string(const CharT (&in)[N + 1]) noexcept
 			: super{basic_fixed_string(in, std::make_index_sequence<N>())} {}
 
-		// NOLINTNEXTLINE(google-explicit-constructor)
-		consteval basic_fixed_string(const std::span<const super::value_type, N> in) noexcept
+		explicit consteval basic_fixed_string(const std::span<const super::value_type, N> in) noexcept
 			: super{in} {}
 
 		[[nodiscard]] constexpr super::size_type length() const noexcept { return this->size(); }
 
 		[[nodiscard]] constexpr super::const_pointer c_str() const noexcept { return this->data(); }
 
-		// NOLINTNEXTLINE(google-explicit-constructor)
 		constexpr operator string_view_type() const noexcept {
 			return {this->data(), this->size()};
 		}
-
-		[[nodiscard]] constexpr iterator begin() noexcept { return this->begin(); }
-		[[nodiscard]] constexpr iterator end() noexcept { return this->end(); }
-		[[nodiscard]] constexpr reverse_iterator rbegin() noexcept { return this->rbegin(); }
-		[[nodiscard]] constexpr reverse_iterator rend() noexcept { return this->rend(); }
 
 		constexpr super::size_type
 		copy(CharT* dest, super::size_type count, super::size_type pos = 0) const
@@ -329,7 +322,8 @@ namespace toria::util
 
 		[[nodiscard]] static consteval bool empty() noexcept { return true; }
 
-		[[nodiscard]] consteval operator string_view_type() const noexcept { return ""; }
+		[[nodiscard]] explicit consteval operator string_view_type() const noexcept { return ""; }
+		[[nodiscard]] static consteval string_view_type view() noexcept { return ""; }
 	};
 
 	template<class CharT, std::size_t N>

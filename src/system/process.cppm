@@ -13,13 +13,15 @@ namespace toria::system
 		};
 
 		std::uint64_t get_current_id() noexcept;
+
 		std::chrono::time_point<std::chrono::file_clock> get_creation_time() noexcept;
+
 		usage get_usage_time() noexcept;
-	};  // namespace process
+	} // namespace process
 
 	export struct unique_pid_token
 	{
-		static unique_pid_token get_unique_pid_token() noexcept  {
+		static unique_pid_token get_unique_pid_token() noexcept {
 			return {process::get_current_id(), process::get_creation_time()};
 		}
 
@@ -33,5 +35,5 @@ namespace toria::system
 		std::chrono::time_point<std::chrono::file_clock> timestamp{};
 	};
 
-	constexpr unique_pid_token NULL{};
-}  // namespace toria::system
+	export constexpr unique_pid_token NULL_PID{};
+} // namespace toria::system

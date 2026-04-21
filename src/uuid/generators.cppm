@@ -82,7 +82,7 @@ namespace toria::uuid::generators
 			_generate_random_bytes(generated, m_generator);
 			const std::span<std::byte, 16> bytes = std::as_writable_bytes(std::span{generated});
 			set_version_and_variant(bytes, uuid::version_type::v4);
-			return {bytes};
+			return uuid(bytes);
 		}
 
 	private:
@@ -116,7 +116,7 @@ namespace toria::uuid::generators
 			hash.finalize();
 			static_cast<void>(hash.get_bytes(bytes));
 			set_version_and_variant(bytes, Version);
-			return {bytes};
+			return uuid(bytes);
 		}
 
 		[[nodiscard]] constexpr uuid operator()(const std::string_view str) const {
@@ -124,7 +124,7 @@ namespace toria::uuid::generators
 		}
 
 	private:
-		uuid m_namespace_uuid;
+		uuid m_namespace_uuid{};
 	};
 
 	export template<std::uniform_random_bit_generator Engine>
@@ -152,7 +152,7 @@ namespace toria::uuid::generators
 				std::byteswap(std::byteswap(std::byteswap(milli) >> 16) | precision & 0x0FFF);
 			const std::span bytes{std::as_writable_bytes(std::span{raw_bytes})};
 			set_version_and_variant(bytes, uuid::version_type::v7);
-			return {bytes};
+			return uuid(bytes);
 		}
 
 		template<is_clock clock = std::chrono::system_clock>

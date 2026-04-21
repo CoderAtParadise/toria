@@ -103,7 +103,7 @@ namespace toria::crypto
 
 		constexpr void update_block() noexcept {
 			std::array<std::uint32_t, 80> w{};
-			std::size_t idx;
+			std::size_t idx = 0;
 			for (idx = 0; idx < 16; ++idx) {
 				w[idx] = static_cast<std::uint32_t>(m_messageBlock[idx * 4 + 0] << 24);
 				w[idx] |= static_cast<std::uint32_t>(m_messageBlock[idx * 4 + 1] << 16);

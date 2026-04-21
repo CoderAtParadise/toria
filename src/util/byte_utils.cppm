@@ -34,7 +34,7 @@ namespace toria::util
 
 		[[nodiscard]] constexpr T value() const noexcept { return std::bit_cast<T>(m_bytes); }
 
-		constexpr std::array<std::byte, size_byte> bytes() const noexcept { return m_bytes; }
+		[[nodiscard]] constexpr std::array<std::byte, size_byte> bytes() const noexcept { return m_bytes; }
 
 		static constexpr std::integral_constant<std::size_t, size_byte> size;
 
@@ -75,7 +75,7 @@ namespace toria::util
 
 		[[nodiscard]] constexpr std::vector<std::byte> bytes() const noexcept { return m_bytes; }
 
-		[[nodiscard]] constexpr std::size_t size() const noexcept { return m_bytes.size(); };
+		[[nodiscard]] constexpr std::size_t size() const noexcept { return m_bytes.size(); }
 
 	private:
 		std::span<T, Size> m_original;
@@ -132,8 +132,8 @@ namespace toria::util
 				destBytes[idx] = srcBytes[idx];
 			}
 			if constexpr (!std::same_as<Dest, std::byte>) {
-				// cast to void as the value is always the dest span
-				// which we can safely discard as we already have it
+				// cast to void as dest has already been written to
+				// which means we can safely discard the return value
 				static_cast<void>(destBytes.value());
 			}
 		}
@@ -151,13 +151,21 @@ namespace toria::util
 				destBytes[idx] = static_cast<std::byte>(val);
 			}
 			if constexpr (!std::same_as<Dest, std::byte>) {
-				// cast to void as the value is always the dest span
-				// which we can safely discard as we already have it
+				// cast to void as dest has already been written to
+				// which means we can safely discard the return value
 				static_cast<void>(destBytes.value());
 			}
 		}
 		else {
 			std::memset(dest.data(), val, count);
 		}
+	}
+
+	export constexpr std::pair<std::uint32_t,std::uint32_t> toHighLow(const std::uint64_t val) noexcept {
+		return {static_cast<std::uint32_t>(val >> 32), static_cast<std::uint32_t>(val)};
+	}
+
+	export constexpr std::uint64_t fromHighLow(const std::uint32_t high,const std::uint32_t low) noexcept {
+		return static_cast<std::uint64_t>(high) << 32 | low;
 	}
 }  // namespace toria::util

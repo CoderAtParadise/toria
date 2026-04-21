@@ -37,13 +37,7 @@ namespace toria::uuid
 	public:
 		constexpr uuid() noexcept = default;
 
-		// NOLINTNEXTLINE(google-explicit-constructor)
-		constexpr uuid(std::span<std::byte, 16> bytes) noexcept {
-			std::ranges::copy(bytes, m_bytes.begin());
-		}
-
-		// NOLINTNEXTLINE(google-explicit-constructor)
-		constexpr uuid(std::span<const std::byte, 16> bytes) noexcept {
+		explicit constexpr uuid(std::span<const std::byte, 16> bytes) noexcept {
 			std::ranges::copy(bytes, m_bytes.begin());
 		}
 
@@ -52,11 +46,9 @@ namespace toria::uuid
 				std::copy(first, last, m_bytes.begin());
 		}
 
-		// NOLINTNEXTLINE(google-explicit-constructor)
-		constexpr uuid(std::ranges::range auto range) { std::ranges::copy(range, m_bytes.begin()); }
+		explicit constexpr uuid(std::ranges::range auto range) { std::ranges::copy(range, m_bytes.begin()); }
 
-		// NOLINTNEXTLINE(google-explicit-constructor)
-		constexpr uuid(std::string_view str) noexcept {
+		explicit constexpr uuid(std::string_view str) noexcept {
 			if (str.size() != 36) {
 				if (str.size() == 38)
 					str = str.substr(1, 36);

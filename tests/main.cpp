@@ -1,3 +1,4 @@
+import std;
 import toria.uuid;
 import toria.crypto;
 import toria.util;
@@ -25,11 +26,13 @@ int main() {
 	std::println("{}", toria::system::thread::get_thread_name(std::this_thread::get_id()));
 	toria::system::thread::set_thread_name(std::this_thread::get_id(), "RenderThread");
 	std::println("{}", toria::system::thread::get_thread_name(std::this_thread::get_id()));
-	std::println("{}", toria::system::thread::get_thread_priority(std::this_thread::get_id()));
+	std::println("{}", toria::system::thread::get_thread_priority(std::this_thread::get_id()).value());
 	std::println("{}", std::chrono::system_clock::now());
 	std::println(
 		"{}", toria::system::process::get_creation_time());
 
+	std::println("OS: {}",toria::system::system_info::get_os_info().name);
+	std::println("{}",toria::system::system_info::get_processor_info().architecture);
+	std::println("{}",toria::system::system_info::get_gpu_info().name);
 	return 0;
-	// 3e a6 8d 6e  2a 08 0b 85
 }

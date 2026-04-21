@@ -12,8 +12,6 @@ struct std::formatter<toria::system::thread::thread_priority>
 	static auto
 	format(const toria::system::thread::thread_priority& value, std::format_context& ctx) {
 		switch (value) {
-			case toria::system::thread::thread_priority::INACTIVE:
-				return std::format_to(ctx.out(), "{}", "INACTIVE");
 			case toria::system::thread::thread_priority::IDLE:
 				return std::format_to(ctx.out(), "{}", "IDLE");
 			case toria::system::thread::thread_priority::LOW:
@@ -31,7 +29,6 @@ struct std::formatter<toria::system::thread::thread_priority>
 				return std::format_to(ctx.out(), "{}", "NORMAL");
 		}
 	}
-	// NOLINTEND(readability-convert-member-functions-to-static)
 };
 
 template<>

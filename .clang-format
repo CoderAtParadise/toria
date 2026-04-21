@@ -6,9 +6,10 @@ Standard: c++20
 ColumnLimit: 100
 IndentWidth: 4
 TabWidth: 4
+DerivePointerAlignment: false
+ReferenceAlignment: Left
 PointerAlignment: Left
 AccessModifierOffset: -4
-AlignAfterOpenBracket: AlwaysBreak
 AlignEscapedNewlines: Left
 AllowShortFunctionsOnASingleLine: Inline
 BreakBeforeBraces: Custom
@@ -18,8 +19,8 @@ BraceWrapping:
   AfterNamespace: true
   AfterStruct: true
   AfterUnion: true
-  BeforeCatch: true
-  BeforeElse: true
+  BeforeCatch: false
+  BeforeElse: false
   SplitEmptyFunction: false
   SplitEmptyRecord: false
 BreakTemplateDeclarations: Yes
