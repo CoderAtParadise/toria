@@ -25,8 +25,7 @@ struct std::formatter<toria::semver::identifier>
 template<toria::semver::identifier_storage Storage>
 struct std::formatter<Storage>
 {
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+	static constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
 
 	auto format(const Storage& value, std::format_context& ctx) const {
 		if (value.empty())
@@ -40,14 +39,13 @@ struct std::formatter<Storage>
 };
 
 template<
-	toria::semver::identifier_storage PrereleaseTagStorage,
-	toria::semver::identifier_storage BuildMetadataTagStorage>
-struct std::formatter<toria::semver::version_impl<PrereleaseTagStorage, BuildMetadataTagStorage>>
+	toria::semver::identifier_storage Storage>
+struct std::formatter<toria::semver::version_impl<Storage>>
 {
 	static constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
 
 	auto format(
-		const toria::semver::version_impl<PrereleaseTagStorage, BuildMetadataTagStorage>& version,
+		const toria::semver::version_impl<Storage>& version,
 		std::format_context& ctx) const {
 		auto out = std::format_to(
 			ctx.out(), "{}.{}.{}", version.major(), version.minor(), version.patch());

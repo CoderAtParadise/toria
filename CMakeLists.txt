@@ -72,7 +72,10 @@ target_sources(
         FILES
         src/semver/semver.cppm
         src/semver/impl.cppm
+        src/semver/parse.cppm
+        src/semver/parse_error.cppm
         src/semver/range.cppm
+        src/semver/semver.cppm
         src/semver/std.cppm
 )
 
