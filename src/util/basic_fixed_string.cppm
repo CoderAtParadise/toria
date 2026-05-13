@@ -26,8 +26,10 @@ namespace toria::util
 		consteval basic_fixed_string(const CharT (&in)[N + 1]) noexcept
 			: super{basic_fixed_string(in, std::make_index_sequence<N>())} {}
 
-		explicit consteval basic_fixed_string(const std::span<const super::value_type, N> in) noexcept
-			: super{in} {}
+		explicit consteval basic_fixed_string(const std::span<const typename super::value_type, N> in) noexcept
+			 {
+				std::copy(in.begin(),in.end(),this->begin());
+			}
 
 		[[nodiscard]] constexpr super::size_type length() const noexcept { return this->size(); }
 
@@ -48,9 +50,14 @@ namespace toria::util
 
 		template<typename super::size_type Off, typename super::size_type Count = npos>
 			requires(Off < super::size())
-		constexpr auto substr() const noexcept {
+		consteval auto substr() const noexcept {
 			constexpr typename super::size_type new_size = std::min(Count, this->size() - Off);
-			return basic_fixed_string<CharT, new_size>({this->data() + Off, new_size});
+			if constexpr (new_size == 0)
+				return basic_fixed_string<CharT,0>("");
+			else {
+				std::span<const CharT,new_size> b{this->data() + Off,new_size};
+				return basic_fixed_string<CharT, new_size>(b);
+			}
 		}
 
 		constexpr auto substr(super::size_type Off, super::size_type Count = npos) const noexcept {
@@ -159,6 +166,7 @@ namespace toria::util
 				return npos;
 			return view().find_first_of(str.view(), pos);
 		}
+
 		[[nodiscard]] constexpr auto
 		find_first_of(string_view_type view, super::size_type pos = 0) const noexcept
 			-> super::size_type {

@@ -70,7 +70,7 @@ target_sources(
         TYPE CXX_MODULES
         BASE_DIRS "${CMAKE_CURRENT_LIST_DIR}/src/semver"
         FILES
-        src/semver/semver.cppm
+        src/semver/identifier.cppm
         src/semver/impl.cppm
         src/semver/parse.cppm
         src/semver/parse_error.cppm

@@ -23,18 +23,12 @@ namespace toria::semver
 			if (std::holds_alternative<std::uint32_t>(m_value)) {
 				return std::get<std::uint32_t>(m_value);
 			}
-			if consteval {
-				std::unreachable();
-			}
 			throw std::bad_variant_access();
 		}
 
 		[[nodiscard]] constexpr std::string_view as_string() const {
 			if (std::holds_alternative<std::string_view>(m_value)) {
 				return std::get<std::string_view>(m_value);
-			}
-			if consteval {
-				std::unreachable();
 			}
 			throw std::bad_variant_access();
 		}
@@ -90,9 +84,6 @@ namespace toria::semver
 		{ t.size() } -> std::same_as<std::size_t>;
 		{ t.empty() } -> std::same_as<bool>;
 		{
-			t.operator[](0)
-		} -> std::same_as<const identifier&>;
-		{
 			t.at(0)
 		} -> std::same_as<const identifier&>;
 	};
@@ -140,9 +131,11 @@ namespace toria::semver
 		struct storage : std::array<identifier, Count>
 		{
 			consteval storage() = default;
+
 			consteval void set_identifiers(const std::vector<identifier>& vals) {
 				std::ranges::copy(vals,this->begin());
 			}
+
 			[[nodiscard]] constexpr std::string_view str() const noexcept { return Str.view(); }
 		};
 
@@ -157,7 +150,8 @@ namespace toria::semver
 			return m_build_metadata_storage;
 		}
 
-		consteval void set_identifiers(const std::vector<identifier>& prIdentifiers,const std::vector<identifier>& bmIdentifiers) noexcept {
+		consteval void set_identifiers(const std::vector<identifier>& prIdentifiers,
+		                               const std::vector<identifier>& bmIdentifiers) noexcept {
 			m_prerelease_storage.set_identifiers(prIdentifiers);
 			m_build_metadata_storage.set_identifiers(bmIdentifiers);
 		}

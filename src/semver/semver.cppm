@@ -231,7 +231,7 @@ namespace toria::semver
 			                    std::move(buildMeta.value())));
 	}
 
-	export version_impl<dynamic_identifiers> try_parse(
+	export version_impl<dynamic_identifiers> try_version(
 		const std::string_view str) {
 		auto _version = version(str);
 		if (!_version.has_value()) {
